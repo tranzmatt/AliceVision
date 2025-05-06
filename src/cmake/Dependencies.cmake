@@ -176,8 +176,8 @@ if(AV_BUILD_GEOGRAM)
     set(GEOGRAM_TARGET geogram)
 
     ExternalProject_Add(${GEOGRAM_TARGET}
-        URL https://github.com/BrunoLevy/geogram/releases/download/v1.8.8/geogram_1.8.8.tar.gz
-        URL_HASH MD5=e66563683fad771ef19fdf8b42c8b2a4
+        URL https://github.com/BrunoLevy/geogram/releases/download/v1.9.5/geogram_1.9.5.tar.gz
+        URL_HASH MD5=5fb7a0fbc04de78b573440449bff3144
         DOWNLOAD_DIR ${BUILD_DIR}/download/geogram
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
@@ -248,8 +248,8 @@ if(AV_BUILD_TBB)
     set(TBB_TARGET tbb)
 
     ExternalProject_Add(${TBB_TARGET}
-        URL https://github.com/uxlfoundation/oneTBB/archive/refs/tags/v2022.1.0-rc1.tar.gz
-        URL_HASH MD5=e37f0538269b454c1bf2b5356c2bb617
+        URL https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2022.1.0.tar.gz
+        URL_HASH MD5=cce28e6cb1ceae14a93848990c98cb6b
         DOWNLOAD_DIR ${BUILD_DIR}/download/tbb
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
@@ -308,7 +308,7 @@ if(AV_BUILD_EXPAT)
 
     ExternalProject_Add(${EXPAT_TARGET}
         GIT_REPOSITORY https://github.com/libexpat/libexpat.git
-        GIT_TAG R_2_5_0
+        GIT_TAG R_2_7_1
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -391,7 +391,7 @@ if(AV_BUILD_OPENGV)
         # Our fork, with a fix:
         GIT_REPOSITORY https://github.com/alicevision/opengv.git
         # Use a custom commit with a fix to override the cxx standard from cmake command line
-        GIT_TAG 65f7edccf5044d445d305580f79c50c2efcbd438
+        GIT_TAG 91f4b19c73450833a40e463ad3648aae80b3a7f3
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -417,8 +417,8 @@ if(AV_BUILD_OPENEXR)
 
     ExternalProject_Add(${OPENEXR_TARGET}
         # vfxplatform CY2022: 3.1.x
-        URL https://github.com/AcademySoftwareFoundation/openexr/archive/v3.1.6.tar.gz
-        URL_HASH MD5=da5daf4d7954c034921e7201bf815938
+        URL https://github.com/AcademySoftwareFoundation/openexr/archive/v3.3.3.tar.gz
+        URL_HASH MD5=1748da38ffd037f6cc32347b2f40aa0e
         DOWNLOAD_DIR ${BUILD_DIR}/download/openexr
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
@@ -526,8 +526,8 @@ if(AV_BUILD_JPEG)
 
     ExternalProject_Add(
         ${JPEG_TARGET}
-        URL https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.1.5.1.tar.gz
-        URL_HASH MD5=33f72421d83ba487ff7b5c81e8765185
+        URL https://github.com/libjpeg-turbo/libjpeg-turbo/archive/3.1.0.tar.gz
+        URL_HASH MD5=1695d39ba38a9593f4107722f3459fe0
         DOWNLOAD_DIR ${BUILD_DIR}/download/libjpeg-turbo
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
@@ -559,7 +559,7 @@ if(AV_BUILD_LIBRAW)
 
     ExternalProject_Add(libraw_cmake
         GIT_REPOSITORY https://github.com/LibRaw/LibRaw-cmake
-        GIT_TAG 6e26c9e73677dc04f9eb236a97c6a4dc225ba7e8
+        GIT_TAG eb98e4325aef2ce85d2eb031c2ff18640ca616d3
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -574,7 +574,7 @@ if(AV_BUILD_LIBRAW)
 
     ExternalProject_Add(${LIBRAW_TARGET}
         GIT_REPOSITORY https://github.com/LibRaw/LibRaw
-        GIT_TAG 0.21.1
+        GIT_TAG 0.21.4
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -620,8 +620,8 @@ if(AV_BUILD_BOOST)
     endif()
     
     ExternalProject_Add(${BOOST_TARGET}
-        URL https://archives.boost.io/release/1.84.0/source/boost_1_84_0.tar.bz2
-        URL_HASH MD5=9dcd632441e4da04a461082ebbafd337
+	URL https://archives.boost.io/release/1.88.0/source/boost_1_88_0.tar.bz2
+	URL_HASH MD5=190701c5017cb9931f12da00db225423
         DOWNLOAD_DIR ${BUILD_DIR}/download/boost
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
@@ -651,7 +651,7 @@ if(AV_BUILD_FFMPEG)
 
         ExternalProject_add(${VPX_TARGET}
             GIT_REPOSITORY https://chromium.googlesource.com/webm/libvpx.git
-            GIT_TAG v1.13.0
+            GIT_TAG v1.15.1
             GIT_PROGRESS OFF
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
@@ -667,8 +667,8 @@ if(AV_BUILD_FFMPEG)
     set(FFMPEG_TARGET ffmpeg)
 
     ExternalProject_add(${FFMPEG_TARGET}
-        URL http://ffmpeg.org/releases/ffmpeg-5.1.2.tar.bz2
-        URL_HASH MD5=53ce2a391fe1db4b5ce5c43b9ea9a814
+        URL http://ffmpeg.org/releases/ffmpeg-5.1.6.tar.bz2
+        URL_HASH MD5=547725dd393a6adc1511da1fd141df25
         DOWNLOAD_DIR ${BUILD_DIR}/download/ffmpeg
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
@@ -699,7 +699,7 @@ if(AV_BUILD_FLANN)
 
     ExternalProject_Add(${LZ4_TARGET}
         GIT_REPOSITORY https://github.com/lz4/lz4
-        GIT_TAG v1.9.4
+        GIT_TAG v1.10.0
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -718,8 +718,8 @@ if(AV_BUILD_FLANN)
 
     set(FLANN_TARGET flann)
     ExternalProject_Add(${FLANN_TARGET}
-        GIT_REPOSITORY https://github.com/alicevision/flann
-        GIT_TAG 46e72429ef60ce9c413fa926ac7729f8dee96395
+        GIT_REPOSITORY https://github.com/flann-lib/flann
+        GIT_TAG f9caaf609d8b8cb2b7104a85cf59eb92c275a25d
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -779,8 +779,8 @@ if(AV_BUILD_PCL)
     set(PCL_TARGET pcl)
 
     ExternalProject_Add(${PCL_TARGET}
-        URL https://github.com/PointCloudLibrary/pcl/archive/refs/tags/pcl-1.13.0.tar.gz
-        URL_HASH MD5=987a5f6e440407a2bcae10c1022568b0
+        URL https://github.com/PointCloudLibrary/pcl/archive/refs/tags/pcl-1.15.0.tar.gz
+        URL_HASH MD5=d4754315eeadf452985a2031ae97673a
         DOWNLOAD_DIR ${BUILD_DIR}/download/${PCL_TARGET}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
@@ -817,7 +817,7 @@ if(AV_BUILD_USD)
 
     ExternalProject_Add(${USD_TARGET}
         GIT_REPOSITORY https://github.com/PixarAnimationStudios/USD.git
-        GIT_TAG v23.05
+        GIT_TAG v25.05
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -1157,8 +1157,8 @@ if(AV_BUILD_LAPACK)
     set(LAPACK_TARGET lapack)
 
     ExternalProject_Add(${LAPACK_TARGET}
-        URL https://github.com/Reference-LAPACK/lapack/archive/v3.11.0.tar.gz
-        URL_HASH MD5=595b064fd448b161cd711fe346f498a7
+        URL https://github.com/Reference-LAPACK/lapack/archive/v3.12.1.tar.gz
+        URL_HASH MD5=2f069617e16b42f5eddcfee85768f204
         DOWNLOAD_DIR ${BUILD_DIR}/download/lapack
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
