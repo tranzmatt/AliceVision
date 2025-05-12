@@ -2,6 +2,7 @@ ARG AV_DEPS_VERSION
 ARG AV_VERSION
 ARG CUDA_VERSION
 ARG UBUNTU_VERSION
+ARG AV_BUNDLE
 FROM alicevision/alicevision-deps:${AV_DEPS_VERSION}-ubuntu${UBUNTU_VERSION}-cuda${CUDA_VERSION}
 LABEL maintainer="AliceVision Team alicevision-team@googlegroups.com"
 
@@ -57,9 +58,9 @@ RUN export CPU_CORES=`${AV_DEV}/docker/check-cpu.sh`; \
         -DALICEVISION_USE_ONNX_GPU:BOOL=OFF \
         -DALICEVISION_BUILD_DOC:BOOL=OFF \
         -DALICEVISION_BUILD_EXAMPLES:BOOL=OFF \
-        "${AV_DEV}" && \
-    make install -j${CPU_CORES} && \
-    make bundle && \
-    rm -rf "${AV_BUILD}" "${AV_DEV}" && \
-    echo "export ALICEVISION_SENSOR_DB=${AV_BUNDLE}/share/aliceVision/cameraSensors.db" >> /etc/profile.d/alicevision.sh && \
-    echo "export ALICEVISION_ROOT=${AV_BUNDLE}" >> /etc/profile.d/alicevision.sh
+        "${AV_DEV}"
+#RUN    make install -j${CPU_CORES}
+#RUN    make bundle
+#RUN    rm -rf "${AV_BUILD}" "${AV_DEV}" && \
+#    echo "export ALICEVISION_SENSOR_DB=${AV_BUNDLE}/share/aliceVision/cameraSensors.db" >> /etc/profile.d/alicevision.sh && \
+#    echo "export ALICEVISION_ROOT=${AV_BUNDLE}" >> /etc/profile.d/alicevision.sh

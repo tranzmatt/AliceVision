@@ -1,5 +1,6 @@
 ARG CUDA_VERSION
 ARG UBUNTU_VERSION
+ARG AV_BUNDLE
 FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu${UBUNTU_VERSION}
 LABEL maintainer="AliceVision Team alicevision-team@googlegroups.com"
 
@@ -41,7 +42,9 @@ RUN . ./etc/os-release && \
 		nasm \
 		automake \
 		cmake \
-		gfortran
+		gfortran \
+                libpcre2-dev \
+                bison
 
 ENV AV_DEV=/opt/AliceVision_git \
     AV_BUILD=/tmp/AliceVision_build \
@@ -78,30 +81,38 @@ RUN mkdir -p "${AV_INSTALL}/lib" && \
 
 RUN test -e /usr/local/cuda/lib64/libcublas.so || ln -s /usr/lib/x86_64-linux-gnu/libcublas.so /usr/local/cuda/lib64/libcublas.so
 
-# RUN make -j ${CPU_CORES} turbojpeg
-# RUN make -j ${CPU_CORES} boost
-# RUN make -j ${CPU_CORES} openexr
-# RUN make -j ${CPU_CORES} tbb
-# RUN make -j ${CPU_CORES} assimp
-# RUN make -j ${CPU_CORES} geogram
-# RUN make -j ${CPU_CORES} eigen
-# RUN make -j ${CPU_CORES} opengv
-# RUN make -j ${CPU_CORES} lapack
-# RUN make -j ${CPU_CORES} suitesparse
-# RUN make -j ${CPU_CORES} ceres
-# RUN make -j ${CPU_CORES} tiff
-# RUN make -j ${CPU_CORES} png
-# RUN make -j ${CPU_CORES} libraw
-# RUN make -j ${CPU_CORES} boost
-# RUN make -j ${CPU_CORES} openimageio
-# RUN make -j ${CPU_CORES} alembic
-# RUN make -j ${CPU_CORES} ffmpeg
-# RUN make -j ${CPU_CORES} opencv
-# RUN make -j ${CPU_CORES} expat
+RUN make -j ${CPU_CORES} turbojpeg
+RUN make -j ${CPU_CORES} boost
+RUN make -j ${CPU_CORES} openexr
+RUN make -j ${CPU_CORES} tbb
+RUN make -j ${CPU_CORES} assimp
+RUN make -j ${CPU_CORES} geogram
+RUN make -j ${CPU_CORES} eigen
+RUN make -j ${CPU_CORES} opengv
+RUN make -j ${CPU_CORES} lapack
+RUN make -j ${CPU_CORES} suitesparse
+RUN make -j ${CPU_CORES} ceres
+RUN make -j ${CPU_CORES} tiff
+RUN make -j ${CPU_CORES} zlib
+RUN make -j ${CPU_CORES} png
+RUN make -j ${CPU_CORES} libraw
+RUN make -j ${CPU_CORES} boost
+RUN make -j ${CPU_CORES} openimageio
+RUN make -j ${CPU_CORES} alembic
+RUN make -j ${CPU_CORES} ffmpeg
+RUN make -j ${CPU_CORES} opencv
+RUN make -j ${CPU_CORES} expat
 
-# RUN make -j ${CPU_CORES} cctag
-# RUN make -j ${CPU_CORES} popsift
+RUN make -j ${CPU_CORES} cctag
+RUN make -j ${CPU_CORES} popsift
+RUN make -j ${CPU_CORES} coinutils
+RUN make -j ${CPU_CORES} OpenMesh
+RUN make -j ${CPU_CORES} lz4
+RUN make -j ${CPU_CORES} flann
 
-RUN cmake --build . -j ${CPU_CORES} && \
-    mv "${AV_INSTALL}/bin" "${AV_INSTALL}/bin-deps" && \
-    rm -rf "${AV_BUILD}"
+RUN cmake .
+RUN make V=1
+#RUN make V=1 -j ${CPU_CORES}
+#RUN make V=1 -j2
+#RUN mv "${AV_INSTALL}/bin" "${AV_INSTALL}/bin-deps"
+#RUN rm -rf "${AV_BUILD}"
