@@ -1,8 +1,8 @@
 ARG AV_DEPS_VERSION
 ARG AV_VERSION
 ARG CUDA_VERSION
-ARG CENTOS_VERSION
-FROM alicevision/alicevision-deps:${AV_DEPS_VERSION}-centos${CENTOS_VERSION}-cuda${CUDA_VERSION}
+ARG ROCKY_VERSION
+FROM alicevision/alicevision-deps:${AV_DEPS_VERSION}-rocky${ROCKY_VERSION}-cuda${CUDA_VERSION}
 LABEL maintainer="AliceVision Team alicevision-team@googlegroups.com"
 ARG TARGET_ARCHITECTURE=core
 

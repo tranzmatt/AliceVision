@@ -1,0 +1,80 @@
+# Implementation Guide
+
+This guide explains how to implement the modular dependency structure to improve build times in Docker.
+
+## Step 1: Create the Directory Structure
+
+Create the following directory structure:
+
+```
+src/cmake/dependencies/
+├── core.cmake               # Core functions and variables
+├── options.cmake            # Build options for all dependencies
+├── options_logging.cmake    # Logging of build options
+├── mark_built.cmake.in      # Template for marking dependencies as built
+├── zlib.cmake               # Individual dependency definitions
+├── eigen.cmake
+├── boost.cmake
+├── flann.cmake
+└── ... (other dependencies)
+```
+
+## Step 2: Copy or Create the Implementation Files
+
+Copy the implementation files from these artifacts:
+- core.cmake: Core dependency management functions
+- options.cmake: Build options for dependencies
+- options_logging.cmake: Logging of build options
+- mark_built.cmake.in: Template for stamp files
+- Dependencies.cmake (new): Main dependency manager
+- Individual dependency files (zlib.cmake, flann.cmake, etc.)
+
+## Step 3: Update Docker Build Scripts
+
+Update the Docker build scripts as described in the "Docker build script changes" artifact.
+
+## Step 4: Implementation Order
+
+Follow this order for implementation:
+
+1. Create the directory structure
+2. Implement the core files
+3. Update the main Dependencies.cmake to include modular files
+4. Implement a few basic dependencies (zlib, eigen, boost)
+5. Update Docker build scripts
+6. Test with a minimal subset of dependencies
+7. Continue implementing remaining dependencies
+8. Final testing and deployment
+
+## Step 5: Testing Process
+
+To test the implementation:
+
+1. First modify a single dependency file (e.g., flann.cmake)
+2. Run the Docker build
+3. Verify that only FLANN is rebuilt, not all other dependencies
+4. Check that stamp files are created correctly
+
+## Step 6: Debugging Tips
+
+If you encounter issues:
+
+- Check that AV_DEPS_VERSION is being passed correctly
+- Verify stamp files are created in the BUILD_DIR
+- Use `FORCE_REBUILD_DEPS=1` to force a full rebuild when needed
+- Examine the Docker build logs to confirm only necessary dependencies are rebuilt
+
+## Step 7: Complete Implementation
+
+Once the basic structure is working:
+
+1. Implement the remaining dependency files
+2. Test all dependencies for proper selective rebuilding
+3. Update documentation to reflect the new build system
+4. Deploy to all developers
+
+## Additional Considerations
+
+- Dependency order is important - follow the same order as in the original Dependencies.cmake file
+- Be careful about dependencies between libraries (e.g., if libA depends on libB, libB must be included first)
+- Consider grouping related dependencies into subdirectories for better organization

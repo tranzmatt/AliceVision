@@ -1,0 +1,17 @@
+# Updates to Dockerfile_rocky_deps
+
+# Add these lines near the top of the file:
+ARG AV_DEPS_VERSION=2025.02.21
+ENV AV_DEPS_VERSION=${AV_DEPS_VERSION}
+
+# Make sure there's a command to create the build directory:
+RUN mkdir -p ${AV_BUILD}/external
+
+# Update the cmake command to include the AV_DEPS_VERSION:
+RUN cmake "${AV_DEV}" \
+     -DCMAKE_BUILD_TYPE=Release \
+     -DALICEVISION_BUILD_DEPENDENCIES:BOOL=ON \
+     -DAV_BUILD_ZLIB:BOOL=ON \
+     -DAV_BUILD_ALICEVISION:BOOL=OFF \
+     -DAV_DEPS_VERSION=${AV_DEPS_VERSION} \
+     -DCMAKE_INSTALL_PREFIX="${AV_INSTALL}"

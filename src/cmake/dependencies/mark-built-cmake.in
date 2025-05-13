@@ -1,0 +1,6 @@
+# src/cmake/dependencies/mark_built.cmake.in
+
+# Helper script to mark a dependency as built
+# This will be configured by the main CMake process
+
+file(WRITE "${BUILD_DIR}/${NAME}_built.stamp" "@AV_DEPS_VERSION@")

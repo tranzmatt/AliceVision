@@ -14,5 +14,5 @@ CUDA_VERSION=11.0 UBUNTU_VERSION=18.04 docker/build-ubuntu.sh
 CUDA_VERSION=10.2 UBUNTU_VERSION=18.04 docker/build-ubuntu.sh
 CUDA_VERSION=9.2 UBUNTU_VERSION=18.04 docker/build-ubuntu.sh
 
-CUDA_VERSION=10.2 CENTOS_VERSION=7 docker/build-centos.sh
-CUDA_VERSION=9.2 CENTOS_VERSION=7 docker/build-centos.sh
+CUDA_VERSION=10.2 ROCKY_VERSION=7 docker/build-rocky.sh
+CUDA_VERSION=9.2 ROCKY_VERSION=7 docker/build-rocky.sh
