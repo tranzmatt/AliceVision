@@ -42,6 +42,7 @@ if(AV_BUILD_GEOGRAM)
                 -DGEOGRAM_WITH_EXPLORAGRAM=OFF
                 -DGEOGRAM_WITH_LUA=OFF
                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+		-DCMAKE_POLICY_VERSION_MINIMUM=3.5
                 <SOURCE_DIR>
             BUILD_COMMAND $(MAKE) -j${CPU_CORES}
             DEPENDS zlib

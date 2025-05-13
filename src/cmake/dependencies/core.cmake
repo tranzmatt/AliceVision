@@ -13,6 +13,7 @@ set(CMAKE_CORE_BUILD_FLAGS
     -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} 
     -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} 
     -DCMAKE_CXX_STANDARD=17
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 )
 
 # Create a stamp file to track when a dependency was built
