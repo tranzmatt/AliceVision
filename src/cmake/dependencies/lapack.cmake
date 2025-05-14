@@ -17,6 +17,7 @@ if(AV_BUILD_LAPACK)
             URL https://github.com/Reference-LAPACK/lapack/archive/v${LAPACK_VERSION}.tar.gz
             URL_HASH ${LAPACK_HASH}
             DOWNLOAD_DIR ${BUILD_DIR}/download/lapack
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
@@ -26,7 +27,7 @@ if(AV_BUILD_LAPACK)
             INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
             CONFIGURE_COMMAND ${CMAKE_COMMAND} ${CMAKE_CORE_BUILD_FLAGS}
                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-		-DCMAKE_POLICY_VERSION_MINIMUM=3.5
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.8
                 <SOURCE_DIR>
             BUILD_COMMAND $(MAKE) -j${CPU_CORES}
             DEPENDS tbb

@@ -26,6 +26,7 @@ if(AV_BUILD_GEOGRAM)
             URL https://github.com/BrunoLevy/geogram/releases/download/v${GEOGRAM_VERSION}/geogram_${GEOGRAM_VERSION}.tar.gz
             URL_HASH ${GEOGRAM_HASH}
             DOWNLOAD_DIR ${BUILD_DIR}/download/geogram
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
@@ -42,11 +43,7 @@ if(AV_BUILD_GEOGRAM)
                 -DGEOGRAM_WITH_EXPLORAGRAM=OFF
                 -DGEOGRAM_WITH_LUA=OFF
                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-<<<<<<< HEAD
-		-DCMAKE_POLICY_VERSION_MINIMUM=3.5
-=======
-                -DCMAKE_POLICY_VERSION_MINIMUM=3.5
->>>>>>> ee301cf30 (Update CMake versions and fix fetch)
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.8
                 <SOURCE_DIR>
             BUILD_COMMAND $(MAKE) -j${CPU_CORES}
             DEPENDS zlib

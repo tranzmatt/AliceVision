@@ -15,6 +15,7 @@ if(AV_BUILD_COINUTILS)
         ExternalProject_Add(${COINUTILS_TARGET}
             GIT_REPOSITORY https://github.com/alicevision/CoinUtils
             GIT_TAG ${COINUTILS_COMMIT}
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
@@ -26,6 +27,7 @@ if(AV_BUILD_COINUTILS)
                 ${CMAKE_COMMAND} 
                 ${CMAKE_CORE_BUILD_FLAGS}
                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.8
                 <SOURCE_DIR>
             BUILD_COMMAND $(MAKE) -j${CPU_CORES}
         )

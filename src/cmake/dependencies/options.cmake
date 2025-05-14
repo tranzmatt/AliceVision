@@ -7,7 +7,7 @@ option(AV_BUILD_DEPENDENCIES_PARALLEL "Number of cores to use when building depe
 option(AV_ONNX_APPLE_ARCH "Version to download OFF Apple [arm64, x86_64]" "arm64")
 
 option(AV_BUILD_CUDA "Enable building an embedded Cuda" OFF)
-option(AV_BUILD_ZLIB "Enable building an embedded ZLIB" OFF)
+option(AV_BUILD_ZLIB "Enable building an embedded ZLIB" ON)
 option(AV_BUILD_ASSIMP "Enable building an embedded ASSIMP" ON)
 option(AV_BUILD_TIFF "Enable building an embedded Tiff" ON)
 option(AV_BUILD_JPEG "Enable building an embedded Jpeg" ON)

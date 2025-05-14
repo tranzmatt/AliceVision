@@ -17,6 +17,7 @@ if(AV_BUILD_OPENEXR)
             URL https://github.com/AcademySoftwareFoundation/openexr/archive/v${OPENEXR_VERSION}.tar.gz
             URL_HASH ${OPENEXR_HASH}
             DOWNLOAD_DIR ${BUILD_DIR}/download/openexr
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
@@ -31,7 +32,7 @@ if(AV_BUILD_OPENEXR)
                     -DOPENEXR_BUILD_TOOLS:BOOL=OFF
                     ${ZLIB_CMAKE_FLAGS} 
                     -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> 
-		    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+                    -DCMAKE_POLICY_VERSION_MINIMUM=3.8
                     <SOURCE_DIR>
             BUILD_COMMAND VERBOSE=1 $(MAKE) -j${CPU_CORES}
             DEPENDS zlib

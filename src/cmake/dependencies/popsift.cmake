@@ -15,6 +15,7 @@ if(AV_BUILD_POPSIFT)
         ExternalProject_Add(${POPSIFT_TARGET}
             GIT_REPOSITORY https://github.com/alicevision/popsift
             GIT_TAG ${POPSIFT_COMMIT}
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
@@ -29,6 +30,7 @@ if(AV_BUILD_POPSIFT)
                 ${CUDA_CMAKE_FLAGS}
                 -DPopSift_BUILD_EXAMPLES:BOOL=OFF
                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.8
                 <SOURCE_DIR>
             BUILD_COMMAND $(MAKE) -j${CPU_CORES}
             DEPENDS boost cuda

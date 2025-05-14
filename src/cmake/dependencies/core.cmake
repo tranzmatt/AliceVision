@@ -13,7 +13,7 @@ set(CMAKE_CORE_BUILD_FLAGS
     -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} 
     -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} 
     -DCMAKE_CXX_STANDARD=17
-    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.8
 )
 
 # Create a stamp file to track when a dependency was built
@@ -49,6 +49,7 @@ function(add_mark_built_step target version)
         COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILD_DIR}
         COMMAND ${CMAKE_COMMAND} -E echo "Marking ${target} as built with version ${version}"
         COMMAND ${CMAKE_COMMAND} -E echo "${version}" > ${BUILD_DIR}/${target}_built.stamp
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
         DEPENDEES install
     )
 endfunction()

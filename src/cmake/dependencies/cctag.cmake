@@ -15,6 +15,7 @@ if(AV_BUILD_CCTAG)
         ExternalProject_Add(${CCTAG_TARGET}
             GIT_REPOSITORY https://github.com/alicevision/CCTag
             GIT_TAG ${CCTAG_VERSION}
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
@@ -36,6 +37,7 @@ if(AV_BUILD_CCTAG)
                 -DCCTAG_EIGEN_MEMORY_ALIGNMENT=ON
                 -DCCTAG_CXX_STANDARD=17
                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.8
                 <SOURCE_DIR>
             BUILD_COMMAND $(MAKE) -j${CPU_CORES}
             DEPENDS boost cuda opencv eigen tbb

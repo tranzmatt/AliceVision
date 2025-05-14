@@ -18,6 +18,7 @@ if(AV_BUILD_ALEMBIC)
             URL https://github.com/alembic/alembic/archive/${ALEMBIC_VERSION}.tar.gz
             URL_HASH ${ALEMBIC_HASH}
             DOWNLOAD_DIR ${BUILD_DIR}/download/alembic
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
@@ -32,6 +33,7 @@ if(AV_BUILD_ALEMBIC)
                 ${ILMBASE_CMAKE_FLAGS}
                 -DUSE_TESTS=OFF
                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.8
                 <SOURCE_DIR>
             BUILD_COMMAND $(MAKE) -j${CPU_CORES}
             DEPENDS boost openexr zlib

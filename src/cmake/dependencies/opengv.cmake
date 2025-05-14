@@ -19,6 +19,7 @@ if(AV_BUILD_OPENGV)
             GIT_REPOSITORY https://github.com/alicevision/opengv.git
             # Use a custom commit with a fix to override the cxx standard from cmake command line
             GIT_TAG ${OPENGV_COMMIT}
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
@@ -31,7 +32,7 @@ if(AV_BUILD_OPENGV)
                 ${CMAKE_CORE_BUILD_FLAGS}
                 ${EIGEN_CMAKE_FLAGS}
                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-		-DCMAKE_POLICY_VERSION_MINIMUM=3.5
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.8
                 <SOURCE_DIR>
             BUILD_COMMAND $(MAKE) -j${CPU_CORES}
             DEPENDS eigen

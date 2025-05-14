@@ -23,6 +23,7 @@ if(AV_BUILD_ASSIMP)
             URL https://github.com/assimp/assimp/archive/refs/tags/v${ASSIMP_VERSION}.tar.gz
             URL_HASH ${ASSIMP_HASH}
             DOWNLOAD_DIR ${BUILD_DIR}/download/assimp
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
@@ -33,7 +34,7 @@ if(AV_BUILD_ASSIMP)
                 ${ASSIMP_BUILD_OPTIONS}
                 ${ZLIB_CMAKE_FLAGS}
                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-		-DCMAKE_POLICY_VERSION_MINIMUM=3.5
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.8
                 -DASSIMP_WARNINGS_AS_ERRORS=OFF
                 -DASSIMP_BUILD_TESTS=OFF
                 <SOURCE_DIR>

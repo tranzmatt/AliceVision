@@ -19,6 +19,7 @@ if(AV_BUILD_OPENCV)
             URL https://github.com/opencv/opencv_contrib/archive/refs/tags/${OPENCV_VERSION}.tar.gz
             URL_HASH ${OPENCV_CONTRIB_HASH}
             DOWNLOAD_DIR ${BUILD_DIR}/download/opencv_contrib
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/opencv_contrib
             BUILD_ALWAYS 0
             UPDATE_COMMAND ""
@@ -32,6 +33,7 @@ if(AV_BUILD_OPENCV)
             URL https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSION}.tar.gz
             URL_HASH ${OPENCV_HASH}
             DOWNLOAD_DIR ${BUILD_DIR}/download/opencv
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             UPDATE_COMMAND ""
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0

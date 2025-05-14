@@ -15,6 +15,7 @@ if(AV_BUILD_LZ4)
         ExternalProject_Add(${LZ4_TARGET}
             GIT_REPOSITORY https://github.com/lz4/lz4
             GIT_TAG v${LZ4_VERSION}
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
@@ -25,6 +26,7 @@ if(AV_BUILD_LZ4)
             CONFIGURE_COMMAND ${CMAKE_COMMAND} 
                 ${CMAKE_CORE_BUILD_FLAGS}
                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.8
                 <SOURCE_DIR>/build/cmake/
             BUILD_COMMAND $(MAKE) -j${CPU_CORES}
             INSTALL_COMMAND $(MAKE) -j${CPU_CORES} install 

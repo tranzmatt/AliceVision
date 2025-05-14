@@ -17,6 +17,7 @@ if(AV_BUILD_OPENMESH)
             URL https://www.graphics.rwth-aachen.de/media/openmesh_static/Releases/10.0/OpenMesh-${OPENMESH_VERSION}.tar.bz2
             URL_HASH ${OPENMESH_HASH}
             DOWNLOAD_DIR ${BUILD_DIR}/download/${OPENMESH_TARGET}
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
@@ -26,6 +27,7 @@ if(AV_BUILD_OPENMESH)
             INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
             CONFIGURE_COMMAND ${CMAKE_COMMAND}
                 -DCMAKE_BUILD_TYPE=Release
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.8
                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> <SOURCE_DIR>
                 -DBUILD_APPS=OFF
                 -DOPENMESH_DOCS=OFF

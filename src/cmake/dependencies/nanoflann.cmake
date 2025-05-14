@@ -15,6 +15,7 @@ if(AV_BUILD_NANOFLANN)
         ExternalProject_Add(${NANOFLANN_TARGET}
             GIT_REPOSITORY https://github.com/jlblancoc/nanoflann
             GIT_TAG ${NANOFLANN_COMMIT}
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
@@ -28,6 +29,7 @@ if(AV_BUILD_NANOFLANN)
                 ${CMAKE_CORE_BUILD_FLAGS}
                 -DNANOFLANN_BUILD_EXAMPLES=OFF
                 -DNANOFLANN_BUILD_TESTS=OFF
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.8
                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> <SOURCE_DIR>
                 -DCMAKE_INSTALL_LIBDIR=lib
             BUILD_COMMAND $(MAKE) -j${CPU_CORES}

@@ -16,6 +16,7 @@ if(AV_BUILD_CLP)
             GIT_REPOSITORY https://github.com/alicevision/Clp
             GIT_TAG ${CLP_COMMIT}
             PREFIX ${BUILD_DIR}
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
             UPDATE_COMMAND ""
@@ -26,6 +27,7 @@ if(AV_BUILD_CLP)
                 ${CMAKE_COMMAND} 
                 ${CMAKE_CORE_BUILD_FLAGS}
                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.8
                 <SOURCE_DIR>
             BUILD_COMMAND $(MAKE) -j${CPU_CORES}
             DEPENDS coinutils osi

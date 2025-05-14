@@ -27,6 +27,7 @@ if(AV_BUILD_FFMPEG)
                     GIT_REPOSITORY https://chromium.googlesource.com/webm/libvpx.git
                     GIT_TAG v${VPX_VERSION}
                     GIT_PROGRESS OFF
+                    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
                     PREFIX ${BUILD_DIR}
                     BUILD_IN_SOURCE 0
                     BUILD_ALWAYS 0
@@ -54,6 +55,7 @@ if(AV_BUILD_FFMPEG)
             URL http://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.bz2
             URL_HASH ${FFMPEG_HASH}
             DOWNLOAD_DIR ${BUILD_DIR}/download/ffmpeg
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0

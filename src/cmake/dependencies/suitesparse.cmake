@@ -27,6 +27,7 @@ if(AV_BUILD_SUITESPARSE)
                 URL https://gmplib.org/download/gmp/gmp-${GMP_VERSION}.tar.xz
                 URL_HASH ${GMP_HASH}
                 DOWNLOAD_DIR ${BUILD_DIR}/download/gmp
+                DOWNLOAD_EXTRACT_TIMESTAMP TRUE
                 PREFIX ${BUILD_DIR}
                 BUILD_IN_SOURCE 0
                 BUILD_ALWAYS 0
@@ -58,6 +59,7 @@ if(AV_BUILD_SUITESPARSE)
                 URL https://ftp.gnu.org/gnu/mpfr/mpfr-${MPFR_VERSION}.tar.gz
                 URL_HASH ${MPFR_HASH}
                 DOWNLOAD_DIR ${BUILD_DIR}/download/mpfr
+                DOWNLOAD_EXTRACT_TIMESTAMP TRUE
                 PREFIX ${BUILD_DIR}
                 BUILD_IN_SOURCE 0
                 BUILD_ALWAYS 0
@@ -89,6 +91,7 @@ if(AV_BUILD_SUITESPARSE)
             URL https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/v${SUITESPARSE_VERSION}.tar.gz
             URL_HASH ${SUITESPARSE_HASH}
             DOWNLOAD_DIR ${BUILD_DIR}/download/suitesparse
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0

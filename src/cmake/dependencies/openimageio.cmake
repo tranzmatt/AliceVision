@@ -17,6 +17,7 @@ if(AV_BUILD_OPENIMAGEIO)
             URL https://github.com/AcademySoftwareFoundation/OpenImageIO/archive/refs/tags/v${OPENIMAGEIO_VERSION}.tar.gz
             URL_HASH ${OPENIMAGEIO_HASH}
             DOWNLOAD_DIR ${BUILD_DIR}/download/oiio
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
@@ -28,6 +29,7 @@ if(AV_BUILD_OPENIMAGEIO)
                 ${CMAKE_COMMAND} 
                 ${CMAKE_CORE_BUILD_FLAGS}
                 -DCMAKE_PREFIX_PATH=${CMAKE_INSTALL_PREFIX}
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.8
                 -DBOOST_ROOT=${CMAKE_INSTALL_PREFIX}
                 -DOIIO_BUILD_TESTS:BOOL=OFF
                 -DOIIO_BUILD_TOOLS:BOOL=OFF

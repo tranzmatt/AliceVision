@@ -16,6 +16,7 @@ if(AV_BUILD_SWIG)
             GIT_REPOSITORY https://github.com/swig/swig
             GIT_TAG v${SWIG_VERSION}
             DOWNLOAD_DIR ${BUILD_DIR}/download/${SWIG_TARGET}
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
@@ -25,6 +26,7 @@ if(AV_BUILD_SWIG)
             INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
             CONFIGURE_COMMAND ${CMAKE_COMMAND}
                 ${CMAKE_CORE_BUILD_FLAGS}
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.8
                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> <SOURCE_DIR>
             BUILD_COMMAND $(MAKE) -j${CPU_CORES}
         )

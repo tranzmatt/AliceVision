@@ -17,6 +17,7 @@ if(AV_BUILD_EIGEN)
             URL https://gitlab.com/libeigen/eigen/-/archive/${EIGEN_VERSION}/eigen-${EIGEN_VERSION}.tar.bz2
             URL_HASH ${EIGEN_HASH}
             DOWNLOAD_DIR ${BUILD_DIR}/download/eigen
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
@@ -28,11 +29,7 @@ if(AV_BUILD_EIGEN)
                 -DCMAKE_CXX_STANDARD=17
                 ${EIGEN_CMAKE_ALIGNMENT_FLAGS}
                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-<<<<<<< HEAD
-		-DCMAKE_POLICY_VERSION_MINIMUM=3.5
-=======
-                -DCMAKE_POLICY_VERSION_MINIMUM=3.5
->>>>>>> ee301cf30 (Update CMake versions and fix fetch)
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.8
                 <SOURCE_DIR>
             BUILD_COMMAND $(MAKE) -j${CPU_CORES}
         )

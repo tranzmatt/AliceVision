@@ -39,6 +39,7 @@ if(AV_BUILD_ONNXRUNTIME)
             URL https://github.com/microsoft/onnxruntime/releases/download/v${AV_ONNX_VERSION}/${AV_ONNX_FILENAME}
             URL_HASH SHA256=${AV_ONNX_HASH}
             DOWNLOAD_DIR ${BUILD_DIR}/download/onnxruntime
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime
             INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
             PREFIX ${BUILD_DIR}

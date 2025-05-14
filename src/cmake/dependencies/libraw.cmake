@@ -16,6 +16,7 @@ if(AV_BUILD_LIBRAW)
         ExternalProject_Add(libraw_cmake
             GIT_REPOSITORY https://github.com/LibRaw/LibRaw-cmake
             GIT_TAG eb98e4325aef2ce85d2eb031c2ff18640ca616d3
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
@@ -32,6 +33,7 @@ if(AV_BUILD_LIBRAW)
         ExternalProject_Add(${LIBRAW_TARGET}
             GIT_REPOSITORY https://github.com/LibRaw/LibRaw
             GIT_TAG ${LIBRAW_VERSION}
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
@@ -51,6 +53,7 @@ if(AV_BUILD_LIBRAW)
                 -DENABLE_EXAMPLES=OFF
                 ${ZLIB_CMAKE_FLAGS}
                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.8
                 -DINSTALL_CMAKE_MODULE_PATH:PATH=<INSTALL_DIR>/cmake
                 <SOURCE_DIR>
             BUILD_COMMAND $(MAKE) -j${CPU_CORES}

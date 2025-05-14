@@ -27,6 +27,7 @@ if(AV_BUILD_BOOST)
             URL https://archives.boost.io/release/${BOOST_VERSION}/source/boost_1_88_0.tar.bz2
             URL_HASH ${BOOST_HASH}
             DOWNLOAD_DIR ${BUILD_DIR}/download/boost
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0

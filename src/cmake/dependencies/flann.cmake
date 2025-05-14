@@ -24,6 +24,7 @@ if(AV_BUILD_FLANN)
             ExternalProject_Add(${LZ4_TARGET}
                 GIT_REPOSITORY https://github.com/lz4/lz4
                 GIT_TAG v${LZ4_VERSION}
+                DOWNLOAD_EXTRACT_TIMESTAMP TRUE
                 PREFIX ${BUILD_DIR}
                 BUILD_IN_SOURCE 0
                 BUILD_ALWAYS 0
@@ -34,11 +35,7 @@ if(AV_BUILD_FLANN)
                 CONFIGURE_COMMAND ${CMAKE_COMMAND} 
                     ${CMAKE_CORE_BUILD_FLAGS}
                     -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-<<<<<<< HEAD
-		    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-=======
-                    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
->>>>>>> ee301cf30 (Update CMake versions and fix fetch)
+                    -DCMAKE_POLICY_VERSION_MINIMUM=3.8
                     <SOURCE_DIR>/build/cmake/
                 BUILD_COMMAND $(MAKE) -j${CPU_CORES}
                 INSTALL_COMMAND $(MAKE) -j${CPU_CORES} install 
@@ -60,6 +57,7 @@ if(AV_BUILD_FLANN)
         ExternalProject_Add(${FLANN_TARGET}
             GIT_REPOSITORY https://github.com/flann-lib/flann
             GIT_TAG ${FLANN_VERSION}
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0

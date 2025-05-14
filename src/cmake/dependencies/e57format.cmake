@@ -16,6 +16,7 @@ if(AV_BUILD_E57FORMAT)
             GIT_REPOSITORY https://github.com/asmaloney/libE57Format.git
             GIT_TAG ${E57FORMAT_VERSION}
             DOWNLOAD_DIR ${BUILD_DIR}/download/${E57FORMAT_TARGET}
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
@@ -26,6 +27,7 @@ if(AV_BUILD_E57FORMAT)
             CONFIGURE_COMMAND ${CMAKE_COMMAND}
                 ${CMAKE_CORE_BUILD_FLAGS}
                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> <SOURCE_DIR>
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.8
             BUILD_COMMAND $(MAKE) -j${CPU_CORES}
         )
         

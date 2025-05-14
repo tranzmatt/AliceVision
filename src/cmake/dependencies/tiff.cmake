@@ -17,6 +17,7 @@ if(AV_BUILD_TIFF)
             URL http://download.osgeo.org/libtiff/tiff-${TIFF_VERSION}.tar.gz
             URL_HASH ${TIFF_HASH}
             DOWNLOAD_DIR ${BUILD_DIR}/download/tiff
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0

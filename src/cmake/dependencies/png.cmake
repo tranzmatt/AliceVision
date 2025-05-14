@@ -24,6 +24,7 @@ if(AV_BUILD_PNG)
             URL https://download.sourceforge.net/libpng/libpng-${PNG_VERSION}.tar.gz
             URL_HASH ${PNG_HASH}
             DOWNLOAD_DIR ${BUILD_DIR}/download/libpng
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
@@ -35,6 +36,7 @@ if(AV_BUILD_PNG)
                 ${ZLIB_CMAKE_FLAGS}
                 -DPNG_ARM_NEON=${AV_PNG_ARM_NEON}
                 -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.8
                 <SOURCE_DIR>
             BUILD_COMMAND $(MAKE) -j${CPU_CORES}
             DEPENDS zlib
