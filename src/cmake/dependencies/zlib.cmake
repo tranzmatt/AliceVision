@@ -28,7 +28,11 @@ if(AV_BUILD_ZLIB)
                 ${CMAKE_COMMAND} 
                 ${CMAKE_CORE_BUILD_FLAGS}
                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+<<<<<<< HEAD
 		-DCMAKE_POLICY_VERSION_MINIMUM=3.5
+=======
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+>>>>>>> ee301cf30 (Update CMake versions and fix fetch)
                 <SOURCE_DIR>
             BUILD_COMMAND $(MAKE) -j${CPU_CORES}
         )
