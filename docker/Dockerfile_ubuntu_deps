@@ -109,6 +109,7 @@ RUN make -j ${CPU_CORES} coinutils
 RUN make -j ${CPU_CORES} OpenMesh
 RUN make -j ${CPU_CORES} lz4
 RUN make -j ${CPU_CORES} flann
+RUN make -j ${CPU_CORES} LEMON
 
 RUN cmake .
 RUN make V=1
