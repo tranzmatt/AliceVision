@@ -1169,9 +1169,11 @@ if(AV_BUILD_OPENIMAGEIO)
 
     ExternalProject_Add(${OPENIMAGEIO_TARGET}
         #URL https://github.com/AcademySoftwareFoundation/OpenImageIO/archive/refs/tags/v3.0.6.1.tar.gz
-        URL https://github.com/AcademySoftwareFoundation/OpenImageIO/archive/refs/tags/v2.5.8.0.tar.gz
-        URL_HASH MD5=1da1065711ad29fb123d2f21a12f72cc
         #URL_HASH MD5=935f926a7457ffd49fa4774449e99325
+        #URL https://github.com/AcademySoftwareFoundation/OpenImageIO/archive/refs/tags/v2.5.8.0.tar.gz
+        #URL_HASH MD5=1da1065711ad29fb123d2f21a12f72cc
+        URL https://github.com/AcademySoftwareFoundation/OpenImageIO/archive/refs/tags/v2.4.13.0.tar.gz
+        URL_HASH MD5=30e8b433bb71a262a51f56a41fc50ac7
         DOWNLOAD_DIR ${BUILD_DIR}/download/oiio
         DOWNLOAD_EXTRACT_TIMESTAMP TRUE
         PREFIX ${BUILD_DIR}
