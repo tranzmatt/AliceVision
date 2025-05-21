@@ -6,6 +6,9 @@
 
 %module (module="pyalicevision") numeric
 
+%include <aliceVision/numeric/eigen.i>
+%eigen_typemaps(Vec2)
+
 %include <aliceVision/global.i>
 %include <aliceVision/numeric/numeric.hpp>
 
