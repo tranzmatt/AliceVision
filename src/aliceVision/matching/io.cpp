@@ -174,7 +174,7 @@ std::size_t loadMatchesFromFolder(PairwiseMatches& matches, const std::string& f
     std::size_t nbLoadedMatchFiles = 0;
     std::vector<std::string> matchFiles;
     // list all matches files in 'folder' matching (i.e containing) 'pattern'
-    for (const auto& entry : boost::make_iterator_range(fs::directory_iterator(folder), {}))
+    for (const auto& entry : boost::iterator_range(fs::directory_iterator(folder), {}))
     {
         if (entry.path().string().find(pattern) != std::string::npos)
         {

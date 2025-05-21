@@ -458,7 +458,7 @@ int aliceVision_main(int argc, char** argv)
     std::vector<sfm::ReconstructedPair> reconstructedPairs;
     //Assuming the filename is pairs_ + a number with json extension
     const std::regex regex("pairs\\_[0-9]+\\.json");
-    for(fs::directory_entry & file : boost::make_iterator_range(fs::directory_iterator(pairsDirectory), {}))
+    for(fs::directory_entry & file : boost::iterator_range(fs::directory_iterator(pairsDirectory), {}))
     {
         if (!std::regex_search(file.path().string(), regex))
         {
