@@ -28,6 +28,7 @@ DEPS_DOCKER_TAG=${REPO_OWNER}/alicevision-deps:${AV_DEPS_VERSION}-ubuntu${UBUNTU
 
 ## DEPENDENCIES
 docker build \
+	--rm \
 	--build-arg AV_BUNDLE=${AV_BUNDLE} \
 	--build-arg CUDA_VERSION=${CUDA_VERSION} \
 	--build-arg UBUNTU_VERSION=${UBUNTU_VERSION} \
@@ -43,6 +44,7 @@ DOCKER_TAG=${REPO_OWNER}/alicevision:${AV_VERSION}-centos${CENTOS_VERSION}-cuda$
 
 ## ALICEVISION
 docker build \
+	--rm \
 	--build-arg AV_BUNDLE=${AV_BUNDLE} \
 	--build-arg CUDA_VERSION=${CUDA_VERSION} \
 	--build-arg UBUNTU_VERSION=${UBUNTU_VERSION} \
