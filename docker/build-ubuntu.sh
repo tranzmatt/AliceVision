@@ -12,7 +12,7 @@ test -e docker/fetch.sh || {
 #export UBUNTU_VERSION=22.04
 
 
-test -z "$AV_DEPS_VERSION" && AV_DEPS_VERSION=2025.03.27
+test -z "$AV_DEPS_VERSION" && AV_DEPS_VERSION=v3.2.0
 #test -z "$AV_VERSION" && AV_VERSION="$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)"
 test -z "$AV_VERSION" && AV_VERSION=v3.2.0
 test -z "$CUDA_VERSION" && CUDA_VERSION=12.1.1
