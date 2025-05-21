@@ -644,8 +644,8 @@ if(AV_BUILD_BOOST)
     endif()
 
     ExternalProject_Add(${BOOST_TARGET}
-	URL https://archives.boost.io/release/1.84.0/source/boost_1_84_0.tar.bz2
-	URL_HASH MD5=9dcd632441e4da04a461082ebbafd337
+	URL https://archives.boost.io/release/1.80.0/source/boost_1_80_0.tar.bz2
+	URL_HASH MD5=df7dc2fc6de751753198a5bf70210da7
         DOWNLOAD_DIR ${BUILD_DIR}/download/boost
         DOWNLOAD_EXTRACT_TIMESTAMP TRUE
         PREFIX ${BUILD_DIR}
@@ -780,7 +780,7 @@ if(AV_BUILD_NANOFLANN)
     set(NANOFLANN_TARGET nanoflann)
     ExternalProject_Add(${NANOFLANN_TARGET}
         GIT_REPOSITORY https://github.com/jlblancoc/nanoflann
-        GIT_TAG 9a653cb243db6a09c94f833b28732b62f033e2b5
+        GIT_TAG v1.5.5
         DOWNLOAD_EXTRACT_TIMESTAMP TRUE
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
