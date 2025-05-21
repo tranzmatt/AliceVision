@@ -490,7 +490,7 @@ int aliceVision_main(int argc, char** argv)
             // - a SfMData file (in that case we split the views)
             if (fs::is_directory(path))
             {
-                for (fs::directory_entry& entry : boost::iterator_range(fs::directory_iterator(path), {}))
+                for (fs::directory_entry& entry : boost::make_iterator_range(fs::directory_iterator(path), {}))
                 {
                     imagePaths.push_back(entry.path().string());
                 }
