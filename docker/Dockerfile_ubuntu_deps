@@ -116,7 +116,7 @@ RUN test -e /usr/local/cuda/lib64/libcublas.so || ln -s /usr/lib/x86_64-linux-gn
 # RUN make -j ${CPU_CORES} OpenMesh
 # RUN make -j ${CPU_CORES} LEMON
 
-RUN cmake .
-RUN make V=1 -j ${CPU_CORES}
-RUN mv "${AV_INSTALL}/bin" "${AV_INSTALL}/bin-deps"
-RUN rm -rf "${AV_BUILD}"
+RUN cmake . && \
+    make -j ${CPU_CORES} && \
+    mv "${AV_INSTALL}/bin" "${AV_INSTALL}/bin-deps" && \
+    rm -rf "${AV_BUILD}"
