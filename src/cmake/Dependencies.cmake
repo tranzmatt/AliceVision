@@ -7,7 +7,7 @@ set(AV_BUILD_DEPENDENCIES_PARALLEL 1
 set(AV_ONNX_APPLE_ARCH "arm64" CACHE STRING "Version to download OFF Apple [arm64, x86_64]")
 
 option(AV_BUILD_CUDA "Enable building an embedded Cuda" OFF)
-option(AV_BUILD_ZLIB "Enable building an embedded ZLIB" OFF)
+option(AV_BUILD_ZLIB "Enable building an embedded ZLIB" ON)
 option(AV_BUILD_ASSIMP "Enable building an embedded ASSIMP" ON)
 option(AV_BUILD_TIFF "Enable building an embedded Tiff" ON)
 option(AV_BUILD_JPEG "Enable building an embedded Jpeg" ON)
@@ -30,7 +30,7 @@ option(AV_BUILD_FLANN "Enable building an embedded Flann" ON)
 option(AV_BUILD_NANOFLANN "Enable building an embedded NanoFlann" ON)
 option(AV_BUILD_LEMON "Enable building an embedded LEMON library" ON)
 option(AV_BUILD_E57FORMAT "Enable building an embedded E57Format" ON)
-option(AV_BUILD_PCL "Enable building an embedded PointCloud library" OFF)
+option(AV_BUILD_PCL "Enable building an embedded PointCloud library" ON)
 option(AV_BUILD_USD "Enable building an embedded USD library" OFF)
 option(AV_BUILD_GEOGRAM "Enable building an embedded Geogram library" ON)
 option(AV_BUILD_TBB "Enable building an embedded TBB library" ON)
@@ -104,6 +104,7 @@ set(CMAKE_CORE_BUILD_FLAGS
         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} 
         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} 
         -DCMAKE_CXX_STANDARD=17
+	-DCMAKE_POLICY_VERSION_MINIMUM=3.8
 )
 
 
@@ -287,6 +288,7 @@ if(AV_BUILD_EIGEN)
         INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
         CONFIGURE_COMMAND ${CMAKE_COMMAND} 
             -DCMAKE_CXX_STANDARD=17
+	    -DCMAKE_POLICY_VERSION_MINIMUM=3.8
             ${EIGEN_CMAKE_ALIGNMENT_FLAGS}
             -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
             <SOURCE_DIR>
@@ -317,6 +319,7 @@ if(AV_BUILD_EXPAT)
         BINARY_DIR ${BUILD_DIR}/libexpat_build
         INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
         CONFIGURE_COMMAND ${CMAKE_COMMAND} ${CMAKE_CORE_BUILD_FLAGS}
+	    -DCMAKE_POLICY_VERSION_MINIMUM=3.8
             -DEXPAT_BUILD_DOCS:BOOL=OFF
             -DEXPAT_BUILD_EXAMPLES:BOOL=OFF
             -DEXPAT_BUILD_TOOLS:BOOL=OFF
@@ -795,6 +798,7 @@ if(AV_BUILD_PCL)
             ${BOOST_CMAKE_FLAGS}
             ${PNG_CMAKE_FLAGS}
             ${CUDA_CMAKE_FLAGS}
+	    -DCMAKE_POLICY_VERSION_MINIMUM=3.8
             -DWITH_CUDA:BOOL=${AV_USE_CUDA}
             -DWITH_OPENGL:BOOL=OFF
             -DWITH_OPENMP:BOOL=ON
@@ -1272,16 +1276,20 @@ if(AV_BUILD_LEMON)
 
     ExternalProject_Add(${LEMON_TARGET}
         GIT_REPOSITORY https://github.com/alicevision/lemon.git
-        GIT_TAG 90244e2b16301d286ca5087fbb3f0130b6a1812e
+        GIT_TAG 8885b9a8b7a20cdf5588964fe30da89093ec53cd
         DOWNLOAD_DIR ${BUILD_DIR}/download/${LEMON_TARGET}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
         UPDATE_COMMAND ""
+	PATCH_COMMAND sed -i "s/CMAKE_POLICY(SET CMP0048 OLD)/#CMAKE_POLICY(SET CMP0048 OLD)\\nproject(LEMON VERSION 1.3.1)/g" <SOURCE_DIR>/CMakeLists.txt
         SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/${LEMON_TARGET}
         BINARY_DIR ${BUILD_DIR}/${LEMON_TARGET}_build
         INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
         CONFIGURE_COMMAND ${CMAKE_COMMAND}
+            -DCMAKE_POLICY_DEFAULT_CMP0048=NEW
+            -DCMAKE_POLICY_DEFAULT_CMP0148=OLD
+	    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
             -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> <SOURCE_DIR>
         BUILD_COMMAND $(MAKE) -j${AV_BUILD_DEPENDENCIES_PARALLEL}
     )
@@ -1304,6 +1312,7 @@ if(AV_BUILD_SWIG)
         BINARY_DIR ${BUILD_DIR}/${SWIG_TARGET}_build
         INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
         CONFIGURE_COMMAND ${CMAKE_COMMAND}
+	    -DCMAKE_POLICY_VERSION_MINIMUM=3.8
             -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> <SOURCE_DIR>
         BUILD_COMMAND $(MAKE) -j${AV_BUILD_DEPENDENCIES_PARALLEL}
     )
@@ -1330,6 +1339,7 @@ if(AV_BUILD_E57FORMAT)
         BINARY_DIR ${BUILD_DIR}/${E57FORMAT_TARGET}_build
         INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
         CONFIGURE_COMMAND ${CMAKE_COMMAND}
+	    -DCMAKE_POLICY_VERSION_MINIMUM=3.8
             -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> <SOURCE_DIR>
         BUILD_COMMAND $(MAKE) -j${AV_BUILD_DEPENDENCIES_PARALLEL}
     )
@@ -1353,6 +1363,7 @@ if(AV_BUILD_OPENMESH)
         BINARY_DIR ${BUILD_DIR}/${OPENMESH_TARGET}_build
         INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
         CONFIGURE_COMMAND ${CMAKE_COMMAND}
+	    -DCMAKE_POLICY_VERSION_MINIMUM=3.8
             -DCMAKE_BUILD_TYPE=Release
             -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> <SOURCE_DIR>
             -DBUILD_APPS=OFF
