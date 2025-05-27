@@ -107,6 +107,12 @@ set(CMAKE_CORE_BUILD_FLAGS
         -DCMAKE_POLICY_VERSION_MINIMUM=3.8
 )
 
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24")
+    set(TIMESTAMP_PARAM DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+else()
+    set(TIMESTAMP_PARAM "")
+endif()
+
 
 #### START EXTERNAL ####
 if(AV_BUILD_ZLIB)
@@ -116,6 +122,7 @@ if(AV_BUILD_ZLIB)
         URL https://www.zlib.net/zlib-1.3.1.tar.gz
         URL_HASH SHA256=9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23
         DOWNLOAD_DIR ${BUILD_DIR}/download/zlib
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -143,6 +150,7 @@ if(AV_USE_CUDA AND AV_BUILD_CUDA)
         # URL https://developer.nvidia.com/compute/cuda/9.2/Prod/local_installers/cuda_9.2.88_396.26_linux
         URL https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/${CUDA_EXE}
         DOWNLOAD_NO_EXTRACT 1
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -180,6 +188,7 @@ if(AV_BUILD_GEOGRAM)
         URL https://github.com/BrunoLevy/geogram/releases/download/v1.9.5/geogram_1.9.5.tar.gz
         URL_HASH MD5=5fb7a0fbc04de78b573440449bff3144
         DOWNLOAD_DIR ${BUILD_DIR}/download/geogram
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -222,6 +231,7 @@ if(AV_BUILD_ASSIMP)
         URL https://github.com/assimp/assimp/archive/refs/tags/v5.2.5.tar.gz
         URL_HASH MD5=0b5a5a2714f1126b9931cdb95f512c91
         DOWNLOAD_DIR ${BUILD_DIR}/download/assimp
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -252,6 +262,7 @@ if(AV_BUILD_TBB)
         URL https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2022.1.0.tar.gz
         URL_HASH MD5=cce28e6cb1ceae14a93848990c98cb6b
         DOWNLOAD_DIR ${BUILD_DIR}/download/tbb
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -279,6 +290,7 @@ if(AV_BUILD_EIGEN)
         URL https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.bz2
         URL_HASH MD5=132dde48fe2b563211675626d29f1707
         DOWNLOAD_DIR ${BUILD_DIR}/download/eigen
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -287,8 +299,7 @@ if(AV_BUILD_EIGEN)
         BINARY_DIR ${BUILD_DIR}/eigen_build
         INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
         CONFIGURE_COMMAND ${CMAKE_COMMAND} 
-            -DCMAKE_CXX_STANDARD=17
-            -DCMAKE_POLICY_VERSION_MINIMUM=3.8
+            ${CMAKE_CORE_BUILD_FLAGS}
             ${EIGEN_CMAKE_ALIGNMENT_FLAGS}
             -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
             <SOURCE_DIR>
@@ -311,6 +322,7 @@ if(AV_BUILD_EXPAT)
     ExternalProject_Add(${EXPAT_TARGET}
         GIT_REPOSITORY https://github.com/libexpat/libexpat.git
         GIT_TAG R_2_7_1
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -372,6 +384,7 @@ if (AV_BUILD_ONNXRUNTIME)
         URL https://github.com/microsoft/onnxruntime/releases/download/v${AV_ONNX_VERSION}/${AV_ONNX_FILENAME}
         URL_HASH SHA256=${AV_ONNX_HASH}
         DOWNLOAD_DIR ${BUILD_DIR}/download/onnxruntime
+        ${TIMESTAMP_PARAM}
         SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime
         INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
         PREFIX ${BUILD_DIR}
@@ -394,6 +407,7 @@ if(AV_BUILD_OPENGV)
         GIT_REPOSITORY https://github.com/alicevision/opengv.git
         # Use a custom commit with a fix to override the cxx standard from cmake command line
         GIT_TAG 91f4b19c73450833a40e463ad3648aae80b3a7f3
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -422,6 +436,7 @@ if(AV_BUILD_OPENEXR)
         URL https://github.com/AcademySoftwareFoundation/openexr/archive/v3.3.3.tar.gz
         URL_HASH MD5=1748da38ffd037f6cc32347b2f40aa0e
         DOWNLOAD_DIR ${BUILD_DIR}/download/openexr
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -461,6 +476,7 @@ if(AV_BUILD_TIFF)
         URL http://download.osgeo.org/libtiff/tiff-4.5.0.tar.gz
         URL_HASH MD5=db9e220a1971acc64487f1d51a20dcaa
         DOWNLOAD_DIR ${BUILD_DIR}/download/tiff
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -496,9 +512,10 @@ if(AV_BUILD_PNG)
 
     ExternalProject_Add(
         ${PNG_TARGET}
-        URL https://download.sourceforge.net/libpng/libpng-1.6.39.tar.gz
-        URL_HASH MD5=93b8e79a008747e70f7704f600349559
+        URL https://download.sourceforge.net/libpng/libpng-1.6.48.tar.gz
+        URL_HASH MD5=387b5ebb8d69dc8f65b0617762d0ce03
         DOWNLOAD_DIR ${BUILD_DIR}/download/libpng
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -531,6 +548,7 @@ if(AV_BUILD_JPEG)
         URL https://github.com/libjpeg-turbo/libjpeg-turbo/archive/3.1.0.tar.gz
         URL_HASH MD5=1695d39ba38a9593f4107722f3459fe0
         DOWNLOAD_DIR ${BUILD_DIR}/download/libjpeg-turbo
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -562,6 +580,7 @@ if(AV_BUILD_LIBRAW)
     ExternalProject_Add(libraw_cmake
         GIT_REPOSITORY https://github.com/LibRaw/LibRaw-cmake
         GIT_TAG eb98e4325aef2ce85d2eb031c2ff18640ca616d3
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -577,6 +596,7 @@ if(AV_BUILD_LIBRAW)
     ExternalProject_Add(${LIBRAW_TARGET}
         GIT_REPOSITORY https://github.com/LibRaw/LibRaw
         GIT_TAG 0.21.4
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -625,6 +645,7 @@ if(AV_BUILD_BOOST)
         URL https://archives.boost.io/release/1.84.0/source/boost_1_84_0.tar.bz2
         URL_HASH MD5=9dcd632441e4da04a461082ebbafd337
         DOWNLOAD_DIR ${BUILD_DIR}/download/boost
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -655,6 +676,7 @@ if(AV_BUILD_FFMPEG)
             GIT_REPOSITORY https://chromium.googlesource.com/webm/libvpx.git
             GIT_TAG v1.15.1
             GIT_PROGRESS OFF
+            ${TIMESTAMP_PARAM}
             PREFIX ${BUILD_DIR}
             BUILD_IN_SOURCE 0
             BUILD_ALWAYS 0
@@ -672,6 +694,7 @@ if(AV_BUILD_FFMPEG)
         URL http://ffmpeg.org/releases/ffmpeg-5.1.6.tar.bz2
         URL_HASH MD5=547725dd393a6adc1511da1fd141df25
         DOWNLOAD_DIR ${BUILD_DIR}/download/ffmpeg
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -702,6 +725,7 @@ if(AV_BUILD_FLANN)
     ExternalProject_Add(${LZ4_TARGET}
         GIT_REPOSITORY https://github.com/lz4/lz4
         GIT_TAG v1.10.0
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -722,6 +746,7 @@ if(AV_BUILD_FLANN)
     ExternalProject_Add(${FLANN_TARGET}
         GIT_REPOSITORY https://github.com/flann-lib/flann
         GIT_TAG f9caaf609d8b8cb2b7104a85cf59eb92c275a25d
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -752,7 +777,8 @@ if(AV_BUILD_NANOFLANN)
     set(NANOFLANN_TARGET nanoflann)
     ExternalProject_Add(${NANOFLANN_TARGET}
         GIT_REPOSITORY https://github.com/jlblancoc/nanoflann
-        GIT_TAG 419c26c498d12231817ada6488e2fd2442dbc68d
+        GIT_TAG v1.5.5
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -784,6 +810,7 @@ if(AV_BUILD_PCL)
         URL https://github.com/PointCloudLibrary/pcl/archive/refs/tags/pcl-1.15.0.tar.gz
         URL_HASH MD5=d4754315eeadf452985a2031ae97673a
         DOWNLOAD_DIR ${BUILD_DIR}/download/${PCL_TARGET}
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -820,6 +847,7 @@ if(AV_BUILD_USD)
     ExternalProject_Add(${USD_TARGET}
         GIT_REPOSITORY https://github.com/PixarAnimationStudios/USD.git
         GIT_TAG v25.05
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -856,6 +884,7 @@ if(AV_BUILD_COINUTILS)
     ExternalProject_Add(${COINUTILS_TARGET}
         GIT_REPOSITORY https://github.com/alicevision/CoinUtils
         GIT_TAG b29532e31471d26dddee99095da3340e80e8c60c
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -880,6 +909,7 @@ if(AV_BUILD_OSI)
     ExternalProject_Add(${OSI_TARGET}
         GIT_REPOSITORY https://github.com/alicevision/Osi
         GIT_TAG 52bafbabf8d29bcfd57818f0dd50ee226e01db7f
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -905,6 +935,7 @@ if(AV_BUILD_CLP)
     ExternalProject_Add(${CLP_TARGET}
         GIT_REPOSITORY https://github.com/alicevision/Clp
         GIT_TAG 4da587acebc65343faafea8a134c9f251efab5b9
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -931,6 +962,7 @@ if(AV_BUILD_POPSIFT)
     ExternalProject_Add(${POPSIFT_TARGET}
         GIT_REPOSITORY https://github.com/alicevision/popsift
         GIT_TAG 4b4b2478d5f0cdb6c4215a031572e951c0c2502e
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -959,7 +991,8 @@ if(AV_BUILD_APRILTAG)
 
     ExternalProject_Add(${APRILTAG_TARGET}
         GIT_REPOSITORY https://github.com/AprilRobotics/apriltag
-        GIT_TAG v3.2.0
+        GIT_TAG v3.4.3
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -987,6 +1020,7 @@ if(AV_BUILD_OPENCV)
         URL https://github.com/opencv/opencv_contrib/archive/refs/tags/4.11.0.tar.gz
         URL_HASH MD5=7dd4bc67eb67faff96ce71745a5e3abe
         DOWNLOAD_DIR ${BUILD_DIR}/download/opencv_contrib
+        ${TIMESTAMP_PARAM}
         SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/opencv_contrib
         BUILD_ALWAYS 0
         UPDATE_COMMAND ""
@@ -999,6 +1033,7 @@ if(AV_BUILD_OPENCV)
         URL https://github.com/opencv/opencv/archive/refs/tags/4.11.0.tar.gz
         URL_HASH MD5=f35fbd46350cc677af13e198805b58f7
         DOWNLOAD_DIR ${BUILD_DIR}/download/opencv
+        ${TIMESTAMP_PARAM}
         UPDATE_COMMAND ""
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -1053,6 +1088,7 @@ if(AV_BUILD_CCTAG)
     ExternalProject_Add(${CCTAG_TARGET}
         GIT_REPOSITORY https://github.com/alicevision/CCTag
         GIT_TAG v1.0.4
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -1091,6 +1127,7 @@ if(AV_BUILD_ALEMBIC)
         URL https://github.com/alembic/alembic/archive/1.8.5.tar.gz
         URL_HASH MD5=fcd5b5492a005057e11b601b60ac9a49
         DOWNLOAD_DIR ${BUILD_DIR}/download/alembic
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -1121,6 +1158,7 @@ if(AV_BUILD_OPENIMAGEIO)
         URL https://github.com/AcademySoftwareFoundation/OpenImageIO/archive/refs/tags/v2.5.8.0.tar.gz
         URL_HASH MD5=1da1065711ad29fb123d2f21a12f72cc
         DOWNLOAD_DIR ${BUILD_DIR}/download/oiio
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -1147,6 +1185,7 @@ if(AV_BUILD_OPENIMAGEIO)
             -DUSE_TIFF=${AV_BUILD_TIFF}
             -DUSE_PNG=${AV_BUILD_PNG}
             -DUSE_PYTHON=OFF -DUSE_OPENCV=OFF -DUSE_OPENGL=OFF -DUSE_NUKE=OFF -DUSE_PTEX=OFF -DBUILD_DOCS=OFF -DBUILD_TESTING=OFF
+            -DOpenImageIO_BUILD_MISSING_DEPS=all
             # TODO: build with libheif
         BUILD_COMMAND $(MAKE) -j${AV_BUILD_DEPENDENCIES_PARALLEL}
         DEPENDS ${BOOST_TARGET} ${OPENEXR_TARGET} ${TIFF_TARGET} ${PNG_TARGET} ${JPEG_TARGET} ${LIBRAW_TARGET} ${ZLIB_TARGET} ${FFMPEG_TARGET}
@@ -1162,6 +1201,7 @@ if(AV_BUILD_LAPACK)
         URL https://github.com/Reference-LAPACK/lapack/archive/v3.12.1.tar.gz
         URL_HASH MD5=2f069617e16b42f5eddcfee85768f204
         DOWNLOAD_DIR ${BUILD_DIR}/download/lapack
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -1183,9 +1223,10 @@ endif()
 
 if(AV_BUILD_SUITESPARSE)
     ExternalProject_add(gmp
-        URL https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz
-        URL_HASH MD5=0b82665c4a92fd2ade7440c13fcaa42b
+        URL https://gmplib.org/download/gmp/gmp-6.3.0.tar.xz
+        URL_HASH MD5=956dc04e864001a9c22429f761f2c283
         DOWNLOAD_DIR ${BUILD_DIR}/download/gmp
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -1196,9 +1237,10 @@ if(AV_BUILD_SUITESPARSE)
     )
 
     ExternalProject_add(mpfr
-        URL https://ftp.gnu.org/gnu/mpfr/mpfr-4.2.0.tar.gz
-        URL_HASH MD5=279b527503118a22bd0022e0d64807cb
+        URL https://ftp.gnu.org/gnu/mpfr/mpfr-4.2.2.tar.gz
+        URL_HASH MD5=7cab7ebfcf087b5c710ab362e2fe2026
         DOWNLOAD_DIR ${BUILD_DIR}/download/mpfr
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -1217,9 +1259,10 @@ if(AV_BUILD_SUITESPARSE)
     endif()
 
     ExternalProject_Add(${SUITESPARSE_TARGET}
-        URL https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/v7.3.0.tar.gz
-        URL_HASH MD5=6ff86003a85d73eb383d82db04af7373
+        URL https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/v7.10.3.tar.gz
+        URL_HASH MD5=d824ca42257575397d384bbbf99cf10e
         DOWNLOAD_DIR ${BUILD_DIR}/download/suitesparse
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -1243,6 +1286,7 @@ if(AV_BUILD_CERES)
     ExternalProject_Add(${CERES_TARGET}
         GIT_REPOSITORY https://github.com/ceres-solver/ceres-solver
         GIT_TAG 2.2.0
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -1276,6 +1320,7 @@ if(AV_BUILD_LEMON)
         GIT_REPOSITORY https://github.com/alicevision/lemon.git
         GIT_TAG 8885b9a8b7a20cdf5588964fe30da89093ec53cd
         DOWNLOAD_DIR ${BUILD_DIR}/download/${LEMON_TARGET}
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -1302,6 +1347,7 @@ if(AV_BUILD_SWIG)
         GIT_REPOSITORY https://github.com/swig/swig
         GIT_TAG v4.3.0
         DOWNLOAD_DIR ${BUILD_DIR}/download/${SWIG_TARGET}
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -1310,7 +1356,7 @@ if(AV_BUILD_SWIG)
         BINARY_DIR ${BUILD_DIR}/${SWIG_TARGET}_build
         INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
         CONFIGURE_COMMAND ${CMAKE_COMMAND}
-            -DCMAKE_POLICY_VERSION_MINIMUM=3.8
+            ${CMAKE_CORE_BUILD_FLAGS}
             -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> <SOURCE_DIR>
         BUILD_COMMAND $(MAKE) -j${AV_BUILD_DEPENDENCIES_PARALLEL}
     )
@@ -1325,10 +1371,37 @@ if(AV_BUILD_E57FORMAT)
     # Add libE57Format
     set(E57FORMAT_TARGET E57Format)
 
+    # First, ensure XercesC is installed if needed
+    if(NOT DEFINED AV_XERCES_INSTALLED)
+        # Add XercesC as a dependency
+        set(XERCES_TARGET XercesC)
+        ExternalProject_Add(${XERCES_TARGET}
+            URL https://dlcdn.apache.org/xerces/c/3/sources/xerces-c-3.3.0.tar.bz2
+            URL_HASH MD5=c75241bc2aa64867742a284f19abc33d
+            ${TIMESTAMP_PARAM}
+            PREFIX ${BUILD_DIR}
+            BUILD_IN_SOURCE 0
+            BUILD_ALWAYS 0
+            UPDATE_COMMAND ""
+            SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/${XERCES_TARGET}
+            BINARY_DIR ${BUILD_DIR}/${XERCES_TARGET}_build
+            INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
+            CONFIGURE_COMMAND ${CMAKE_COMMAND}
+                ${CMAKE_CORE_BUILD_FLAGS}
+                -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+                <SOURCE_DIR>
+            BUILD_COMMAND $(MAKE) -j${AV_BUILD_DEPENDENCIES_PARALLEL}
+        )
+        set(XERCES_CMAKE_FLAGS -DXercesC_DIR=${CMAKE_INSTALL_PREFIX}/lib/cmake/XercesC)
+        set(AV_XERCES_INSTALLED TRUE)
+    endif()
+
+    # Now configure E57Format with XercesC location
     ExternalProject_add(${E57FORMAT_TARGET}
         GIT_REPOSITORY https://github.com/asmaloney/libE57Format.git
-        GIT_TAG v3.1.1
+        GIT_TAG v3.2.0
         DOWNLOAD_DIR ${BUILD_DIR}/download/${E57FORMAT_TARGET}
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -1337,9 +1410,15 @@ if(AV_BUILD_E57FORMAT)
         BINARY_DIR ${BUILD_DIR}/${E57FORMAT_TARGET}_build
         INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
         CONFIGURE_COMMAND ${CMAKE_COMMAND}
-            -DCMAKE_POLICY_VERSION_MINIMUM=3.8
-            -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> <SOURCE_DIR>
-        BUILD_COMMAND $(MAKE) -j${AV_BUILD_DEPENDENCIES_PARALLEL}
+            ${CMAKE_CORE_BUILD_FLAGS}
+            -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+            ${XERCES_CMAKE_FLAGS}
+            -DCMAKE_PREFIX_PATH=${CMAKE_INSTALL_PREFIX}
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+            -DCMAKE_MESSAGE_LOG_LEVEL=DEBUG
+            <SOURCE_DIR>
+        BUILD_COMMAND $(MAKE) V=1 -j${AV_BUILD_DEPENDENCIES_PARALLEL}
+        DEPENDS ${XERCES_TARGET}
     )
 
     set(E57FORMAT_CMAKE_FLAGS -DE57FORMAT_DIR:PATH=${CMAKE_INSTALL_PREFIX}/share/E57Format)
@@ -1350,9 +1429,10 @@ if(AV_BUILD_OPENMESH)
     set(OPENMESH_TARGET OpenMesh)
 
     ExternalProject_add(${OPENMESH_TARGET}
-        URL https://www.graphics.rwth-aachen.de/media/openmesh_static/Releases/10.0/OpenMesh-10.0.0.tar.bz2
-        URL_HASH MD5=4d166aecbc09df58b38de9759c92a437
+        URL https://www.graphics.rwth-aachen.de/media/openmesh_static/Releases/11.0/OpenMesh-11.0.0.tar.bz2
+        URL_HASH MD5=1876da3efa474b00ff2ce76d52d05076
         DOWNLOAD_DIR ${BUILD_DIR}/download/${OPENMESH_TARGET}
+        ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 0
@@ -1361,7 +1441,7 @@ if(AV_BUILD_OPENMESH)
         BINARY_DIR ${BUILD_DIR}/${OPENMESH_TARGET}_build
         INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
         CONFIGURE_COMMAND ${CMAKE_COMMAND}
-            -DCMAKE_POLICY_VERSION_MINIMUM=3.8
+            ${CMAKE_CORE_BUILD_FLAGS}
             -DCMAKE_BUILD_TYPE=Release
             -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> <SOURCE_DIR>
             -DBUILD_APPS=OFF
@@ -1414,12 +1494,14 @@ if(AV_BUILD_ALICEVISION)
     # Build Alicevision super build mode
     ExternalProject_Add(aliceVision
         PREFIX ${CMAKE_CURRENT_SOURCE_DIR}
+        ${TIMESTAMP_PARAM}
         BUILD_IN_SOURCE 0
         BUILD_ALWAYS 1
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src
         BINARY_DIR ${BUILD_DIR}/aliceVision_build
         INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
         CONFIGURE_COMMAND ${CMAKE_COMMAND}
+        ${CMAKE_CORE_BUILD_FLAGS}
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_SHARED_LIBS:BOOL=ON -DTARGET_ARCHITECTURE=core
         -DALICEVISION_ROOT=${ALICEVISION_ROOT}
         -DALICEVISION_USE_ALEMBIC=ON
