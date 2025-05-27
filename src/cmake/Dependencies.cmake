@@ -640,8 +640,8 @@ if(AV_BUILD_BOOST)
     endif()
 
     ExternalProject_Add(${BOOST_TARGET}
-	URL https://archives.boost.io/release/1.80.0/source/boost_1_80_0.tar.bz2
-	URL_HASH MD5=df7dc2fc6de751753198a5bf70210da7
+        URL https://archives.boost.io/release/1.80.0/source/boost_1_80_0.tar.bz2
+        URL_HASH MD5=df7dc2fc6de751753198a5bf70210da7
         DOWNLOAD_DIR ${BUILD_DIR}/download/boost
         ${TIMESTAMP_PARAM}
         PREFIX ${BUILD_DIR}
@@ -1331,7 +1331,9 @@ if(AV_BUILD_LEMON)
         BINARY_DIR ${BUILD_DIR}/${LEMON_TARGET}_build
         INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
         CONFIGURE_COMMAND ${CMAKE_COMMAND}
-	    -DCMAKE_POLICY_VERSION_MINIMUM=3.8
+            -DCMAKE_POLICY_DEFAULT_CMP0048=NEW
+            -DCMAKE_POLICY_DEFAULT_CMP0148=OLD
+	    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
             -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> <SOURCE_DIR>
         BUILD_COMMAND $(MAKE) -j${AV_BUILD_DEPENDENCIES_PARALLEL}
     )
