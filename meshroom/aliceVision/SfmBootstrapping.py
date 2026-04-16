@@ -1,16 +1,15 @@
-__version__ = "4.0"
+__version__ = "4.2"
 
 from meshroom.core import desc
 from meshroom.core.utils import VERBOSE_LEVEL
 
 
 class SfMBootStrapping(desc.AVCommandLineNode):
-    commandLine = 'aliceVision_sfmBootstrapping {allParams}'
-    size = desc.DynamicNodeSize('input')
+    commandLine = "aliceVision_sfmBootstrapping {allParams}"
+    size = desc.DynamicNodeSize("input")
 
-    category = 'Sparse Reconstruction'
-    documentation = '''
-'''
+    category = "Sparse Reconstruction"
+    documentation = """ """
 
     inputs = [
         desc.File(
@@ -18,6 +17,13 @@ class SfMBootStrapping(desc.AVCommandLineNode):
             label="SfMData",
             description="SfMData file.",
             value="",
+        ),
+        desc.ChoiceParam(
+            name="method",
+            label="Method",
+            description="Bootstrapping method: classic (epipolar geometry), mesh (3D mesh constraints), mesh_single (mesh without visual parallax), or depth (depth map information).",
+            values=["classic", "mesh", "mesh_single", "depth"],
+            value="classic",
         ),
         desc.File(
             name="tracksFilename",
@@ -30,6 +36,7 @@ class SfMBootStrapping(desc.AVCommandLineNode):
             label="Mesh File",
             description="Mesh file (*.obj).",
             value="",
+            enabled=lambda node: node.method.value.startswith("mesh")
         ),
         desc.File(
             name="pairs",
@@ -38,10 +45,18 @@ class SfMBootStrapping(desc.AVCommandLineNode):
             value="",
         ),
         desc.FloatParam(
-            name="minAngleInitialPair",
-            label="Min Angle Initial Pair",
-            description="Minimum angle for the initial pair.",
+            name="minAngleSoftInitialPair",
+            label="Min Angle Initial Pair (Soft)",
+            description="Pair score is downgraded heavily if angle is under this value",
             value=5.0,
+            range=(0.1, 10.0, 0.1),
+            advanced=True,
+        ),
+        desc.FloatParam(
+            name="minAngleHardInitialPair",
+            label="Min Angle Initial Pair (Hard)",
+            description="Minimum angle for the initial pair validation.",
+            value=1.0,
             range=(0.1, 10.0, 0.1),
             advanced=True,
         ),

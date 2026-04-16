@@ -5,6 +5,7 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <aliceVision/sfmData/SfMData.hpp>
+#include <aliceVision/alicevision_omp.hpp>
 #include <aliceVision/sfmDataIO/sfmDataIO.hpp>
 #include <aliceVision/system/Logger.hpp>
 #include <aliceVision/cmdline/cmdline.hpp>
@@ -13,6 +14,7 @@
 #include <aliceVision/fuseCut/InputSet.hpp>
 #include <aliceVision/dataio/E57Reader.hpp>
 #include <aliceVision/camera/camera.hpp>
+#include <aliceVision/camera/Equidistant.hpp>
 #include <filesystem>
 
 #include <boost/program_options.hpp>
@@ -201,7 +203,7 @@ int aliceVision_main(int argc, char** argv)
         correctedSensorPosition.z() = sensorPosition.y();
 
         geometry::Pose3 pose(Eigen::Matrix3d::Identity(), correctedSensorPosition);
-        sfmData.getPoses().emplace(idMesh, pose);
+        sfmData.getPoses().assign(idMesh, sfmData::CameraPose(pose));
 
         // Create view for sfmData
         sfmData::View::sptr view = std::make_shared<sfmData::View>("nopath", idMesh, 0, idMesh, 1, 1);
@@ -341,7 +343,7 @@ int aliceVision_main(int argc, char** argv)
     fuseCut::SimpleNode octree(bbmin, bbmax);
     for (const auto& pt : sfmData.getLandmarks())
     {
-        octree.store(pt.second.X);
+        octree.store(pt.second.getX());
     }
 
     // Now regroup cells as much as we can

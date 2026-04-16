@@ -4,11 +4,9 @@ from meshroom.core import desc
 from meshroom.core.utils import VERBOSE_LEVEL
 
 class NormalIntegration(desc.CommandLineNode):
-    commandLine = 'aliceVision_normalIntegration {allParams}'
-    category = 'Photometric Stereo'
-    documentation = '''
-Evaluate a depth map from a normals map (currently in development)
-'''
+    commandLine = "aliceVision_normalIntegration {allParams}"
+    category = "Photometric Stereo"
+    documentation = """Evaluate a depth map from a normals map (currently in development)."""
 
     inputs = [
         desc.File(
@@ -47,6 +45,6 @@ Evaluate a depth map from a normals map (currently in development)
             description="Generated depth in the camera coordinate system.",
             semantic="image",
             value="{nodeCacheFolder}/<POSE_ID>_depthMap.exr",
-            group="", # do not export on the command line
+            commandLineGroup="", # do not export on the command line
         )
     ]

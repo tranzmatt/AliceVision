@@ -6,6 +6,7 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <aliceVision/sfmData/SfMData.hpp>
+#include <aliceVision/alicevision_omp.hpp>
 #include <aliceVision/sfmDataIO/sfmDataIO.hpp>
 #include <aliceVision/sfm/sfm.hpp>
 #include <aliceVision/sfm/pipeline/regionsIO.hpp>
@@ -199,8 +200,10 @@ int aliceVision_main(int argc, char** argv)
     if (lockScenePreviouslyReconstructed)
     {
         // lock all reconstructed camera poses
-        for (auto& cameraPosePair : sfmData.getPoses())
-            cameraPosePair.second.lock();
+        for (auto & [_, pose] : sfmData.getPoses().valueRange())
+        {
+            pose.lock();
+        }
 
         for (const auto& viewPair : sfmData.getViews())
         {

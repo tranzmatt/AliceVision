@@ -1,4 +1,4 @@
-__version__ = "3.1"
+__version__ = "3.2"
 
 import json
 
@@ -25,15 +25,13 @@ def findMetadata(d, keys, defaultValue):
 
 
 class LdrToHdrCalibration(desc.AVCommandLineNode):
-    commandLine = 'aliceVision_LdrToHdrCalibration {allParams}'
-    size = desc.DynamicNodeSize('input')
+    commandLine = "aliceVision_LdrToHdrCalibration {allParams}"
+    size = desc.DynamicNodeSize("input")
     cpu = desc.Level.INTENSIVE
     ram = desc.Level.NORMAL
 
-    category = 'Panorama HDR'
-    documentation = '''
-Calibrate LDR to HDR response curve from samples.
-'''
+    category = "Panorama HDR"
+    documentation = """Calibrate LDR to HDR response curve from samples."""
 
     inputs = [
         desc.File(
@@ -46,7 +44,7 @@ Calibrate LDR to HDR response curve from samples.
             name="samples",
             label="Samples Folder",
             description="Samples folder.",
-            value="{nodeCacheFolder}",
+            value="",
         ),
         desc.IntParam(
             name="userNbBrackets",
@@ -55,7 +53,7 @@ Calibrate LDR to HDR response curve from samples.
             value=0,
             range=(0, 15, 1),
             invalidate=False,
-            group="user",  # not used directly on the command line
+            commandLineGroup="user",  # not used directly on the command line
             errorMessage="The set number of brackets is not a multiple of the number of input images.\n"
                          "Errors will occur during the computation.",
             exposed=True,
@@ -68,7 +66,7 @@ Calibrate LDR to HDR response curve from samples.
                         "else it is equal to 'userNbBrackets'.",
             value=0,
             range=(0, 15, 1),
-            group="bracketsParams",
+            commandLineGroup="bracketsParams",
         ),
         desc.BoolParam(
             name="byPass",
@@ -122,7 +120,7 @@ Calibrate LDR to HDR response curve from samples.
             values=COLORSPACES,
             value="AUTO",
             invalidate=False,
-            group="user",  # not used directly on the command line
+            commandLineGroup="user",  # not used directly on the command line
             enabled=lambda node: node.byPass.enabled and not node.byPass.value,
             exposed=True,
         ),
@@ -147,11 +145,17 @@ Calibrate LDR to HDR response curve from samples.
     ]
 
     outputs = [
-       desc.File(
+        desc.File(
             name="response",
             label="Response File",
             description="Path to the output response file.",
             value="{nodeCacheFolder}/response_<INTRINSIC_ID>.csv",
+        ),
+        desc.File(
+            name="luminanceStatistics",
+            label="Luminance Statistics",
+            description="File containing the luminance statistics produced by the calibration process",
+            value="{nodeCacheFolder}/luminanceStatistics_<INTRINSIC_ID>.txt",
         ),
     ]
 
@@ -178,7 +182,7 @@ Calibrate LDR to HDR response curve from samples.
             return
         node.userNbBrackets.validValue = True  # Reset the status of "userNbBrackets"
 
-        cameraInitOutput = node.input.getLinkParam(recursive=True)
+        cameraInitOutput = node.input.inputRootLink
         if not cameraInitOutput:
             node.nbBrackets.value = 0
             return
@@ -196,7 +200,7 @@ Calibrate LDR to HDR response curve from samples.
 
         if not cameraInitOutput.node.hasAttribute("viewpoints"):
             if cameraInitOutput.node.hasAttribute("input"):
-                cameraInitOutput = cameraInitOutput.node.input.getLinkParam(recursive=True)
+                cameraInitOutput = cameraInitOutput.node.input.inputRootLink
         if cameraInitOutput and cameraInitOutput.node and cameraInitOutput.node.hasAttribute("viewpoints"):
             viewpoints = cameraInitOutput.node.viewpoints.value
         else:

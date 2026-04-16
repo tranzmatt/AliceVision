@@ -7,11 +7,17 @@
 #include "checkerDetector.hpp"
 
 #include <aliceVision/system/Logger.hpp>
+#include <aliceVision/image/conversion.hpp>
+#include <aliceVision/image/drawing.hpp>
+#include <aliceVision/image/Sampler.hpp>
+#include <aliceVision/image/filtering.hpp>
+#include <aliceVision/image/convolution.hpp>
 
 #include <OpenImageIO/imagebufalgo.h>
 
 #include <boost/math/constants/constants.hpp>
 
+#include <atomic>
 #include <limits>
 #include <algorithm>
 
@@ -26,14 +32,22 @@ using RowVector = Matrix<Type, 1, Size>;
 namespace aliceVision {
 namespace calibration {
 
-bool CheckerDetector::process(const image::Image<image::RGBColor>& source, bool useNestedGrids, bool debug)
+bool CheckerDetector::process(const image::Image<image::RGBColor>& source, size_t maxLevels, size_t minConsensus, bool useNestedGrids, bool useAllSeeds, bool debug)
 {
     image::Image<float> grayscale;
     image::ConvertPixelType(source, &grayscale);
 
     const Vec2 center(grayscale.width() / 2, grayscale.height() / 2);
 
-    const double scales[] = {1.0, 0.75, 0.5, 0.25};
+    // Create the scales for multiscale detection
+    // We use a power of 2 pyramid and an additional 0.75 scale
+    std::vector<double> scales;
+    scales.push_back(1.0);
+    scales.push_back(0.75);
+    for (int level = 1; level < maxLevels; level++)
+    {
+        scales.push_back(1.0 / pow(2.0, level));
+    }
 
     std::vector<IntermediateCorner> allCorners;
     for (double scale : scales)
@@ -106,7 +120,7 @@ bool CheckerDetector::process(const image::Image<image::RGBColor>& source, bool 
 
     ALICEVISION_LOG_INFO("[CheckerDetector] extracting checkerboards with " << _corners.size() << " corners");
 
-    buildCheckerboards(_boards, _corners);
+    buildCheckerboards(_boards, _corners, useAllSeeds);
 
     ALICEVISION_LOG_DEBUG("[CheckerDetector] built " << _boards.size() << " checkerboards");
 
@@ -135,7 +149,7 @@ bool CheckerDetector::process(const image::Image<image::RGBColor>& source, bool 
         sortCheckerBoardsByDistanceToCenter(center);
         filterNestedCheckerBoards(source.rows(), source.cols());
         buildNestedConnectors();
-        groupNestedCheckerboards();
+        groupNestedCheckerboards(minConsensus);
     }
 
     if (debug)
@@ -158,11 +172,11 @@ bool CheckerDetector::processLevel(std::vector<Vec2>& corners, const image::Imag
     // Resize image
     image::Image<float> toUpdate = input;
     image::Image<float> rescaled(nw, nh);
-    const oiio::ImageSpec imageSpecResized(nw, nh, 1, oiio::TypeDesc::FLOAT);
-    const oiio::ImageSpec imageSpecOrigin(w, h, 1, oiio::TypeDesc::FLOAT);
-    const oiio::ImageBuf inBuf(imageSpecOrigin, toUpdate.data());
-    oiio::ImageBuf outBuf(imageSpecResized, rescaled.data());
-    oiio::ImageBufAlgo::resize(outBuf, inBuf);
+    const OIIO::ImageSpec imageSpecResized(nw, nh, 1, OIIO::TypeDesc::FLOAT);
+    const OIIO::ImageSpec imageSpecOrigin(w, h, 1, OIIO::TypeDesc::FLOAT);
+    const OIIO::ImageBuf inBuf(imageSpecOrigin, toUpdate.data());
+    OIIO::ImageBuf outBuf(imageSpecResized, rescaled.data());
+    OIIO::ImageBufAlgo::resize(outBuf, inBuf);
 
     // Normalize image between 0 and 1
     image::Image<float> normalized;
@@ -1015,13 +1029,25 @@ bool CheckerDetector::growIteration(CheckerBoard& board, const std::vector<Check
     return false;
 }
 
-void CheckerDetector::buildCheckerboards(std::vector<CheckerBoard>& boards, const std::vector<CheckerBoardCorner>& refinedCorners) const
+void CheckerDetector::buildCheckerboards(std::vector<CheckerBoard>& boards, const std::vector<CheckerBoardCorner>& refinedCorners, bool useAllSeeds) const
 {
-    std::vector<bool> used(refinedCorners.size(), false);
+    std::vector<std::atomic<unsigned char>> used(refinedCorners.size());
+
+    #pragma omp parallel for schedule(dynamic)
     for (IndexT cid = 0; cid < refinedCorners.size(); ++cid)
     {
-        if (used[cid])
-            continue;
+        // Early skip: if this seed corner is already used, no point trying it.
+        // This is a racy read but only serves as a fast-path optimization;
+        // the authoritative check happens inside the critical section below.
+        if (!useAllSeeds)
+        {
+            unsigned char lused = used[cid].load(std::memory_order_relaxed);
+
+            if (lused)
+            {
+                continue;
+            }
+        }
 
         // Check if corner can be used as seed
         CheckerBoard board;
@@ -1029,22 +1055,6 @@ void CheckerDetector::buildCheckerboards(std::vector<CheckerBoard>& boards, cons
         {
             continue;
         }
-
-        // Check if board contains already used corners
-        bool valid = true;
-        for (int i = 0; i < board.rows(); ++i)
-        {
-            for (int j = 0; j < board.cols(); ++j)
-            {
-                if (used[board(i, j)])
-                {
-                    valid = false;
-                }
-            }
-        }
-
-        if (!valid)
-            continue;
 
         // Extend board as much as possible
         while (growIteration(board, refinedCorners)) {}
@@ -1056,25 +1066,17 @@ void CheckerDetector::buildCheckerboards(std::vector<CheckerBoard>& boards, cons
             for (int j = 0; j < board.cols(); ++j)
             {
                 if (board(i, j) == UndefinedIndexT)
+                {
                     continue;
+                }
+
                 count++;
             }
         }
 
         if (count < 10)
-            continue;
-
-        // Update used corners
-        for (int i = 0; i < board.rows(); ++i)
         {
-            for (int j = 0; j < board.cols(); ++j)
-            {
-                if (board(i, j) == UndefinedIndexT)
-                    continue;
-
-                const IndexT id = board(i, j);
-                used[id] = true;
-            }
+            continue;
         }
 
         // Threshold on energy value
@@ -1083,7 +1085,48 @@ void CheckerDetector::buildCheckerboards(std::vector<CheckerBoard>& boards, cons
             continue;
         }
 
-        boards.push_back(board);
+        // Atomically check for corner conflicts and commit the board.
+        // This critical section ensures no two boards can claim the same
+        // corners: the "check used" and "mark used" steps are indivisible.
+        #pragma omp critical
+        {
+            bool valid = true;
+
+            if (!useAllSeeds)
+            {
+                // Check if board contains already used corners
+                for (int i = 0; i < board.rows() && valid; ++i)
+                {
+                    for (int j = 0; j < board.cols() && valid; ++j)
+                    {
+                        if (board(i, j) != UndefinedIndexT && used[board(i, j)].load(std::memory_order_relaxed))
+                        {
+                            valid = false;
+                        }
+                    }
+                }
+            }
+
+            if (valid)
+            {
+                // Mark corners as used
+                if (!useAllSeeds)
+                {
+                    for (int i = 0; i < board.rows(); ++i)
+                    {
+                        for (int j = 0; j < board.cols(); ++j)
+                        {
+                            if (board(i, j) != UndefinedIndexT)
+                            {
+                                used[board(i, j)].store(1, std::memory_order_relaxed);
+                            }
+                        }
+                    }
+                }
+
+                boards.push_back(board);
+            }
+        }
     }
 }
 
@@ -1146,8 +1189,10 @@ void CheckerDetector::drawCheckerBoard(image::Image<image::RGBColor>& img, bool 
         drawEdges(board, colors[idx], false);
 
         idx++;
-        if (idx >= _boards.size())
+        if (idx >= colors.size())
+        {
             idx = 0;
+        }
     }
 }
 
@@ -1698,7 +1743,7 @@ void CheckerDetector::buildNestedConnectors()
     }
 }
 
-bool CheckerDetector::groupNestedCheckerboardsPair(Vec2i& ref_center, const IndexT& other, int scale)
+bool CheckerDetector::groupNestedCheckerboardsPair(size_t minConsensus, Vec2i& ref_center, const IndexT& other, int scale)
 {
     const CheckerBoard ref_board = _boards[0];
     CheckerBoard cur_board = _boards[other];
@@ -1762,8 +1807,7 @@ bool CheckerDetector::groupNestedCheckerboardsPair(Vec2i& ref_center, const Inde
         }
     }
 
-    const int minVotes = 5;
-    if (max_count < minVotes)
+    if (max_count < minConsensus)
     {
         return false;
     }
@@ -1848,7 +1892,7 @@ bool CheckerDetector::groupNestedCheckerboardsPair(Vec2i& ref_center, const Inde
     return true;
 }
 
-void CheckerDetector::groupNestedCheckerboards()
+void CheckerDetector::groupNestedCheckerboards(size_t minConsensus)
 {
     int current_scale = 1;
     bool change = true;
@@ -1867,7 +1911,7 @@ void CheckerDetector::groupNestedCheckerboards()
         // Try to find another checkerboard with the same level
         for (std::size_t idx_compare = 1; idx_compare < _boards.size(); ++idx_compare)
         {
-            if (groupNestedCheckerboardsPair(center, idx_compare, current_scale))
+            if (groupNestedCheckerboardsPair(minConsensus, center, idx_compare, current_scale))
             {
                 change = true;
                 break;
@@ -1882,7 +1926,7 @@ void CheckerDetector::groupNestedCheckerboards()
         // Try to find another checkerboard with the next level
         for (std::size_t idx_compare = 1; idx_compare < _boards.size(); ++idx_compare)
         {
-            if (groupNestedCheckerboardsPair(center, idx_compare, current_scale))
+            if (groupNestedCheckerboardsPair(minConsensus, center, idx_compare, current_scale))
             {
                 change = true;
                 break;
@@ -1900,6 +1944,35 @@ void CheckerDetector::groupNestedCheckerboards()
     newboard.fill(UndefinedIndexT);
     newboard.block(update.y(), update.x(), _boards[0].rows(), _boards[0].cols()) = _boards[0];
     _boards[0] = newboard;
+}
+
+double CheckerDetector::getScore() const
+{
+    double maxScore = 0.0;
+    for (const auto & board :_boards)
+    {
+        size_t countValid = 0;
+        double sumScale = 0.0;
+        for (const auto & item : board.reshaped())
+        {
+            if (item == UndefinedIndexT)
+            {
+                continue;
+            }
+
+            // Scale is between 0 and 1
+            sumScale += _corners[item].scale;
+            countValid++;
+        }
+
+        // The score is the number of valid points in the checkerboard + the mean scale of the corners to disambiguate.
+        double score = (countValid > 0)
+                       ? (double(countValid) + sumScale / double(countValid))
+                       : 0.0;
+        maxScore = std::max(maxScore, score);
+    }
+
+    return maxScore;
 }
 
 }  // namespace calibration

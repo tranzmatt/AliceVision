@@ -4,9 +4,11 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
-%module (module="pyalicevision") geometry
+%module (package="pyalicevision") geometry
 
+%include <aliceVision/global.i>
 %include <aliceVision/numeric/eigen.i>
+
 %eigen_typemaps(Vec2)
 %eigen_typemaps(Vec3)
 %eigen_typemaps(Eigen::Vector3d)
@@ -23,5 +25,4 @@
 %include <aliceVision/geometry/Intersection.i>
 %include <aliceVision/geometry/Pose3.i>
 %include <aliceVision/geometry/RigidTransformation3D.i>
-%include <aliceVision/geometry/Similarity3.i>
 %include <aliceVision/geometry/lie.i>

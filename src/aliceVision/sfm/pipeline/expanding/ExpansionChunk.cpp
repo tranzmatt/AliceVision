@@ -7,13 +7,13 @@
 #include "ExpansionChunk.hpp"
 
 #include <aliceVision/sfm/pipeline/expanding/SfmTriangulation.hpp>
-#include <aliceVision/sfm/pipeline/expanding/SfmResection.hpp>
+#include <aliceVision/system/Logger.hpp>
 
 namespace aliceVision {
 namespace sfm {
 
 
-bool ExpansionChunk::process(sfmData::SfMData & sfmData, const track::TracksHandler & tracksHandler, const std::set<IndexT> & viewsChunk)
+bool ExpansionChunk::process(sfmData::SfMData & sfmData, const track::TracksHandler & tracksHandler, const std::set<IndexT> & viewsChunk, EExpansionMode expansionMode)
 {   
     _ignoredViews.clear();
     ALICEVISION_LOG_INFO("ExpansionChunk::process start");
@@ -29,7 +29,32 @@ bool ExpansionChunk::process(sfmData::SfMData & sfmData, const track::TracksHand
     //Compute the pose given the existing point cloud
     if (!_bundleHandler)
     {
+        ALICEVISION_LOG_ERROR("Bundle handler is not set");
         return false;
+    }
+
+    //Check if historyHandler exists
+    if (!_historyHandler)
+    {
+        ALICEVISION_LOG_ERROR("History handler is not set");
+        return false;
+    }
+
+    //Check if resectionHandler exists
+    if (!_resectionHandler)
+    {
+        ALICEVISION_LOG_ERROR("Resection handler is not set");
+        return false;
+    }
+
+    //How many views to resect ?
+    size_t countToProcess = 0;
+    for (const IndexT viewId : viewsChunk)
+    {
+        if (!sfmData.isPoseAndIntrinsicDefined(viewId))
+        {
+            countToProcess++;
+        }
     }
 
 
@@ -42,6 +67,7 @@ bool ExpansionChunk::process(sfmData::SfMData & sfmData, const track::TracksHand
     };
 
     std::vector<IntermediateResectionInfo> intermediateInfos;
+    std::set<IndexT> addedViews;
 
     ALICEVISION_LOG_INFO("Resection start");
     #pragma omp parallel for
@@ -56,10 +82,8 @@ bool ExpansionChunk::process(sfmData::SfMData & sfmData, const track::TracksHand
             IntermediateResectionInfo iri;
             iri.viewId = viewId;
 
-            SfmResection resection(_resectionIterations, _resectionMaxError);
-
             std::mt19937 randomNumberGenerator;
-            if (!resection.processView(sfmData, 
+            if (!_resectionHandler->processView(sfmData, 
                                 tracksHandler.getAllTracks(), tracksHandler.getTracksPerView(), 
                                 randomNumberGenerator, viewId, 
                                 iri.pose, iri.threshold, iri.inliersCount))
@@ -74,12 +98,22 @@ bool ExpansionChunk::process(sfmData::SfMData & sfmData, const track::TracksHand
         }
     }
 
+    //Early exit if no valid resections
+    if (intermediateInfos.size() == 0)
+    {
+        //If no resection to do, then maybe we want to force recomputation
+        if (countToProcess > 0)
+        {
+            ALICEVISION_LOG_INFO("ExpansionChunk::process early end");
+            return false;
+        }
+    }
+
     //Check that at least one view has rich info
-    const int poorInliersCount = 100;
     int richViews = 0;
     for (const auto & item : intermediateInfos)
     {
-        if (item.inliersCount > poorInliersCount)
+        if (item.inliersCount > _weakResectionSize)
         {
             richViews++;
         }
@@ -91,7 +125,7 @@ bool ExpansionChunk::process(sfmData::SfMData & sfmData, const track::TracksHand
     {
         if (richViews > 0)
         {
-            if (item.inliersCount < poorInliersCount)
+            if (item.inliersCount < _weakResectionSize)
             {
                 _ignoredViews.insert(item.viewId);
                 continue;
@@ -99,6 +133,7 @@ bool ExpansionChunk::process(sfmData::SfMData & sfmData, const track::TracksHand
         }
         
         addPose(sfmData, item.viewId, item.pose);
+        addedViews.insert(item.viewId);
     }
 
     // Get a list of valid views
@@ -119,21 +154,25 @@ bool ExpansionChunk::process(sfmData::SfMData & sfmData, const track::TracksHand
     {
         return false;
     }
+
+    // When not in try hard mode, increase the default min points per pose
+    size_t minPoints = _bundleHandler->getMinPointsPerPose();
+    if (expansionMode == EExpansionMode::EXPANSION_STRICT)
+    { 
+        _bundleHandler->setMinPointsPerPose(minPoints * 2);
+    }
     
-    if (!_bundleHandler->process(sfmData, tracksHandler, validViewIds))
+    bool sfmCheck = _bundleHandler->process(sfmData, tracksHandler, validViewIds);
+    
+    //Roll back the bundle parameters
+    _bundleHandler->setMinPointsPerPose(minPoints);
+
+    if (!sfmCheck)
     {
         return false;
     }
-
-    if (_pointFetcherHandler)
-    {
-        setConstraints(sfmData, tracksHandler, validViewIds);
-    }
-
-    if (_historyHandler)
-    {
-        _historyHandler->saveState(sfmData);
-    }
+    
+    _historyHandler->saveState(sfmData);
 
     ALICEVISION_LOG_INFO("ExpansionChunk::process end");
 
@@ -142,53 +181,108 @@ bool ExpansionChunk::process(sfmData::SfMData & sfmData, const track::TracksHand
 
 bool ExpansionChunk::triangulate(sfmData::SfMData & sfmData, const track::TracksHandler & tracksHandler, const std::set<IndexT> & viewIds)
 {
-    ALICEVISION_LOG_INFO("ExpansionChunk::triangulate start");
-    SfmTriangulation triangulation(_triangulationMinPoints, _maxTriangulationError);
+    ALICEVISION_LOG_INFO("ExpansionChunk::triangulate start");   
+    const bool enableMultiviewTriangulation = true;
 
-    std::set<IndexT> evaluatedTracks;
-    std::map<IndexT, sfmData::Landmark> outputLandmarks;
+    const size_t minPoints = _triangulationHandler->getMinObservations();
 
-    std::mt19937 randomNumberGenerator;
-    if (!triangulation.process(sfmData, tracksHandler.getAllTracks(), tracksHandler.getTracksPerView(), 
-                                randomNumberGenerator, viewIds, 
-                                evaluatedTracks, outputLandmarks))
+    if (enableMultiviewTriangulation)
     {
-        return false;
+        std::set<IndexT> evaluatedTracks;
+        std::map<IndexT, sfmData::Landmark> outputLandmarks;
+        std::mt19937 randomNumberGenerator;
+        if (!_triangulationHandler->process(sfmData, tracksHandler.getAllTracks(), tracksHandler.getTracksPerView(), 
+                                    randomNumberGenerator, viewIds, 
+                                    evaluatedTracks, outputLandmarks, false))
+        {
+            return false;
+        }
+
+        auto & landmarks = sfmData.getLandmarks();
+        ALICEVISION_LOG_INFO("Existing landmarks before multiview : " << landmarks.size());
+
+        for (const auto & pl : outputLandmarks)
+        {
+            const auto & landmark = pl.second;
+
+            if (landmarks.find(pl.first) != landmarks.end())
+            {
+                landmarks.erase(pl.first);
+            }
+            
+            if (landmark.getObservations().size() < minPoints)
+            {
+                continue;
+            }
+
+            if (!SfmTriangulation::checkChierality(sfmData, landmark))
+            {
+                continue;
+            }
+
+            double maxAngle = SfmTriangulation::getMaximalAngle(sfmData, landmark);
+            if (maxAngle < _minTriangulationAngleDegrees)
+            {
+                continue;
+            }
+
+            landmarks.insert(pl);
+        }
+
+        ALICEVISION_LOG_INFO("New landmarks count after multiview : " << landmarks.size());
+        ALICEVISION_LOG_INFO("ExpansionChunk::triangulate end");
     }
 
-    auto & landmarks = sfmData.getLandmarks();
-    ALICEVISION_LOG_INFO("Existing landmarks : " << landmarks.size());
-
-    for (const auto & pl : outputLandmarks)
+    if (_enableDepthPrior)
     {
-        const auto & landmark = pl.second;
+        std::set<IndexT> evaluatedTracks;
+        std::map<IndexT, sfmData::Landmark> outputLandmarks;
+        std::mt19937 randomNumberGenerator;
 
-        if (landmarks.find(pl.first) != landmarks.end())
+        if (!_triangulationHandler->process(sfmData, tracksHandler.getAllTracks(), tracksHandler.getTracksPerView(), 
+                                    randomNumberGenerator, viewIds, 
+                                    evaluatedTracks, outputLandmarks, true))
         {
-            landmarks.erase(pl.first);
+            return false;
+        }
+        
+        auto & landmarks = sfmData.getLandmarks();
+        ALICEVISION_LOG_INFO("Existing landmarks before depth prior : " << landmarks.size());
+
+        for (const auto & pl : outputLandmarks)
+        {
+            const auto & landmark = pl.second;
+
+            if (landmarks.find(pl.first) != landmarks.end())
+            {
+                if (!_ignoreMultiviewOnPrior)
+                {
+                    continue;
+                }
+            }
+            
+            if (landmark.getObservations().size() < minPoints)
+            {
+                // Mesh based landmarks (with point fetcher) don't require minimum observation count
+                // as depth is constrained by the mesh.
+                if (landmark.getPointFetcher() == nullptr)
+                {
+                    continue;
+                }
+            }
+            
+            if (!SfmTriangulation::checkChierality(sfmData, landmark))
+            {
+                continue;
+            }
+
+            
+            landmarks.insert_or_assign(pl.first, pl.second);
         }
 
-        if (landmark.getObservations().size() < _triangulationMinPoints)
-        {
-            continue;
-        }
-
-        if (!SfmTriangulation::checkChierality(sfmData, landmark))
-        {
-            continue;
-        }
-
-        double maxAngle = SfmTriangulation::getMaximalAngle(sfmData, landmark);
-        if (maxAngle < _minTriangulationAngleDegrees)
-        {
-            continue;
-        }
-
-        landmarks.insert(pl);
+        ALICEVISION_LOG_INFO("New landmarks count after depth prior: " << landmarks.size());
+        ALICEVISION_LOG_INFO("ExpansionChunk::triangulate end");
     }
-
-    ALICEVISION_LOG_INFO("New landmarks count : " << landmarks.size());
-    ALICEVISION_LOG_INFO("ExpansionChunk::triangulate end");
 
     return true;
 }
@@ -204,7 +298,7 @@ void ExpansionChunk::addPose(sfmData::SfMData & sfmData, IndexT viewId, const Ei
 
 void ExpansionChunk::setConstraints(sfmData::SfMData & sfmData, const track::TracksHandler & tracksHandler, const std::set<IndexT> & viewIds)
 {
-    ALICEVISION_LOG_INFO("ExpansionChunk::setConstraints start");
+    /*ALICEVISION_LOG_INFO("ExpansionChunk::setConstraints start");
     const track::TracksMap & tracks = tracksHandler.getAllTracks();
     const track::TracksPerView & tracksPerView = tracksHandler.getTracksPerView();
 
@@ -302,7 +396,7 @@ void ExpansionChunk::setConstraints(sfmData::SfMData & sfmData, const track::Tra
         const Vec3 point = vecInfo[idBest].first;
         const Vec3 normal = vecInfo[idBest].second;
 
-        double dist = (point - landmark.X).norm();
+        double dist = (point - landmark.getX()).norm();
         if (dist > maxDistLandmark)
         {
             continue;
@@ -318,7 +412,7 @@ void ExpansionChunk::setConstraints(sfmData::SfMData & sfmData, const track::Tra
     }
 
     ALICEVISION_LOG_INFO("ExpansionChunk::setConstraints added " << constraints.size() << " constraints");
-    ALICEVISION_LOG_INFO("ExpansionChunk::setConstraints end");
+    ALICEVISION_LOG_INFO("ExpansionChunk::setConstraints end");*/
 }
 
 } // namespace sfm

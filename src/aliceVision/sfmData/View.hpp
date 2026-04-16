@@ -65,6 +65,9 @@ class View
         _image(new ImageInfo(imagePath, width, height, metadata))
     {}
 
+    View(const View& v) = default;
+
+
     /**
      * @brief Shallow View Copy
      * return a pointer to a new View
@@ -86,7 +89,7 @@ class View
     {
         // image paths can be different
         return _viewId == other._viewId && _intrinsicId == other._intrinsicId && _poseId == other._poseId && _rigId == other._rigId &&
-               _subPoseId == other._subPoseId;
+               _subPoseId == other._subPoseId && _imageGroupId == other._imageGroupId;
     }
 
     inline bool operator!=(const View& other) const { return !(*this == other); }
@@ -114,6 +117,12 @@ class View
      * @return view id
      */
     IndexT getViewId() const { return _viewId; }
+
+    /**
+     * @brief Get the image group id
+     * @return image group id
+     */
+    IndexT getImageGroupId() const { return _imageGroupId; }
 
     /**
      * @brief Get the intrinsic id
@@ -170,6 +179,12 @@ class View
      * @param[in] viewId The given view id
      */
     void setViewId(IndexT viewId) { _viewId = viewId; }
+
+    /**
+     * @brief Set the given image group id
+     * @param[in] imageGroupId The given image group id
+     */
+    void setImageGroupId(IndexT imageGroupId) { _imageGroupId = imageGroupId; }
 
     /**
      * @brief Set the given intrinsic id
@@ -234,8 +249,14 @@ class View
      */
     void setResectionId(IndexT resectionId) { _resectionId = resectionId; }
 
-  private:
-    View(const View& v) = default;
+    /**
+     * @brief Check if the view has the minimal identifiers required for processing.
+     * @return true if view, intrinsic, and pose identifiers are set consistently.
+     */
+    bool isFullySetup()
+    {
+        return (getViewId() != UndefinedIndexT && getIntrinsicId() != UndefinedIndexT && getPoseId() == getViewId());
+    }
 
   private:
     /// view id
@@ -248,6 +269,8 @@ class View
     IndexT _rigId;
     /// corresponding sub-pose id or undefined
     IndexT _subPoseId;
+    /// image group id
+    IndexT _imageGroupId = UndefinedIndexT;
     /// corresponding frame id for synchronized views
     IndexT _frameId = UndefinedIndexT;
     /// resection id

@@ -1,20 +1,21 @@
-__version__ = "1.0"
+__version__ = "2.0"
 
 from meshroom.core import desc
 from meshroom.core.utils import VERBOSE_LEVEL
-
+from pyalicevision import parallelization as avpar
 
 class CheckerboardDetection(desc.AVCommandLineNode):
-    commandLine = 'aliceVision_checkerboardDetection {allParams}'
-    size = desc.DynamicNodeSize('input')
+    commandLine = "aliceVision_checkerboardDetection {allParams}"
+    size = avpar.DynamicViewsSize("input")
+    
     parallelization = desc.Parallelization(blockSize=5)
-    commandLineRange = '--rangeStart {rangeStart} --rangeSize {rangeBlockSize}'
+    commandLineRange = "--rangeStart {rangeStart} --rangeSize {rangeBlockSize}"
 
-    category = 'Other'
-    documentation = '''
+    category = "Other"
+    documentation = """
 Detect checkerboard structures in a set of images.
 The detection method also supports nested calibration grids.
-'''
+"""
 
     inputs = [
         desc.File(
@@ -40,6 +41,28 @@ The detection method also supports nested calibration grids.
             label="Ignore Pixel Aspect Ratio",
             description="Ignore pixel aspect ratio for detection.",
             value=False,
+        ),
+        desc.BoolParam(
+            name="useAllSeeds",
+            label="Use all seeds",
+            description="False will ignore seed corner point if it is already part of a detected potential checkerboard.",
+            value=False,
+        ),
+        desc.IntParam(
+            name="maxLevels",
+            label="Maximum scale for pyramid",
+            description="Maximum number of levels used in multiscale point detection.",
+            value=2,
+            range=(1, 10, 1),
+            advanced=True
+        ),
+        desc.IntParam(
+            name="minConsensus",
+            label="Minimum merge consensus",
+            description="Minimum number of shared corners to merge checkerboards.",
+            value=5,
+            range=(1, 10, 1),
+            advanced=True
         ),
         desc.BoolParam(
             name="exportDebugImages",
@@ -70,6 +93,6 @@ The detection method also supports nested calibration grids.
             description="Debug images.",
             semantic="image",
             value="{nodeCacheFolder}/<VIEW_ID>.png",
-            group="",  # do not export on the command line
+            commandLineGroup="",  # do not export on the command line
         ),
     ]

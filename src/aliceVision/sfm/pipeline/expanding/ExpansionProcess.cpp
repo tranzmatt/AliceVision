@@ -6,6 +6,7 @@
 
 #include "ExpansionProcess.hpp"
 
+#include <aliceVision/system/Logger.hpp>
 
 namespace aliceVision {
 namespace sfm {
@@ -30,14 +31,21 @@ bool ExpansionProcess::process(sfmData::SfMData & sfmData, track::TracksHandler 
     }
 
     //Prepare existing data
-    prepareExisting(sfmData, tracksHandler);
+    if (!prepareExisting(sfmData, tracksHandler))
+    {
+        ALICEVISION_LOG_ERROR("Failed to prepare process");
+        return false;
+    }
+
+    EExpansionMode expansionMode = EExpansionMode::EXPANSION_STRICT;
 
     int nbPoses = 0;
-    do
+    
+    while (true)
     {
         nbPoses = sfmData.getPoses().size();
 
-        if (!_iterationHandler->process(sfmData, tracksHandler))
+        if (!_iterationHandler->process(sfmData, tracksHandler, expansionMode))
         {
             return false;
         }
@@ -45,16 +53,14 @@ bool ExpansionProcess::process(sfmData::SfMData & sfmData, track::TracksHandler 
         if (_postProcessHandler)
         {
             if (_postProcessHandler->process(sfmData, tracksHandler))
-            {
-                return true;
-                
+            {                
                 if (_iterationHandler->getChunkHandler() == nullptr)
                 {
                     return false;
                 }
 
                 // Perform a new estimation step on modified views
-                if (!_iterationHandler->getChunkHandler()->process(sfmData, tracksHandler, _postProcessHandler->getUpdatedViews()))
+                if (!_iterationHandler->getChunkHandler()->process(sfmData, tracksHandler, _postProcessHandler->getUpdatedViews(), expansionMode))
                 {
                     return false;
                 }
@@ -62,10 +68,30 @@ bool ExpansionProcess::process(sfmData::SfMData & sfmData, track::TracksHandler 
         }
 
         ALICEVISION_LOG_INFO("ExpansionProcess poses count : " << sfmData.getPoses().size());
+        
+        // Everything is already computed, exit
+        if (sfmData.isFullyReconstructed())
+        {
+            break;
+        }
+
+        // Nothing changed in the last iteration
+        if (sfmData.getPoses().size() == nbPoses)
+        {
+            //Before exiting, try again with less constraints
+            if (expansionMode == EExpansionMode::EXPANSION_PERMISSIVE)
+            {
+                break;
+            }
+
+            expansionMode = EExpansionMode::EXPANSION_PERMISSIVE;
+        }
     }
-    while (sfmData.getPoses().size() != nbPoses);
+    
 
     ALICEVISION_LOG_INFO("ExpansionProcess end");
+
+    _historyHandler->debrief(sfmData);
 
     return true;
 }
@@ -73,6 +99,20 @@ bool ExpansionProcess::process(sfmData::SfMData & sfmData, track::TracksHandler 
 bool ExpansionProcess::prepareExisting(sfmData::SfMData & sfmData, const track::TracksHandler & tracksHandler)
 {
     ALICEVISION_LOG_INFO("ExpansionProcess prepareExisting");
+
+    // Remove points without point fetcher
+    std::erase_if(sfmData.getLandmarks(), [](const auto & item) {
+        const auto & [key, value] = item;
+        if (value.getReferenceViewIndex() != UndefinedIndexT)
+        {
+            if (value.getPointFetcher() == nullptr)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    });
 
     //Prepare existing data
     remapExistingLandmarks(sfmData, tracksHandler);
@@ -87,7 +127,7 @@ bool ExpansionProcess::prepareExisting(sfmData::SfMData & sfmData, const track::
         }
 
         // Process everything in existing sfmData
-        if (!_iterationHandler->getChunkHandler()->process(sfmData, tracksHandler, sfmData.getValidViews()))
+        if (!_iterationHandler->getChunkHandler()->process(sfmData, tracksHandler, sfmData.getValidViews(), EExpansionMode::EXPANSION_STRICT))
         {
             return false;
         }
@@ -123,7 +163,7 @@ void ExpansionProcess::remapExistingLandmarks(sfmData::SfMData & sfmData, const 
 
         const IndexT firstViewId = landmarkPair.second.getObservations().begin()->first;
         const IndexT firstFeatureId = landmarkPair.second.getObservations().begin()->second.getFeatureId();
-        const feature::EImageDescriberType descType = landmarkPair.second.descType;
+        const feature::EImageDescriberType descType = landmarkPair.second.getDescType();
 
         obsToLandmark.emplace(ObsKey(firstViewId, firstFeatureId, descType), landmarkId);
     }
@@ -149,6 +189,13 @@ void ExpansionProcess::remapExistingLandmarks(sfmData::SfMData & sfmData, const 
             }
 
             auto landmarkPair = landmarks.find(it->second);
+
+            // This should not happen if each feature is associated to only one track
+            if (landmarkPair == landmarks.end())
+            {
+                continue;
+            }
+
             sfmData::Landmark l = landmarkPair->second;
             landmarks.erase(landmarkPair->first);
 

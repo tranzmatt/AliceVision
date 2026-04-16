@@ -5,13 +5,15 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ExpansionIteration.hpp"
+
+#include <aliceVision/system/Logger.hpp>
 #include <aliceVision/sfm/pipeline/expanding/ExpansionChunk.hpp>
 
 namespace aliceVision {
 namespace sfm {
 
 
-bool ExpansionIteration::process(sfmData::SfMData & sfmData, track::TracksHandler & tracksHandler)
+bool ExpansionIteration::process(sfmData::SfMData & sfmData, track::TracksHandler & tracksHandler, EExpansionMode expansionMode)
 {
     ALICEVISION_LOG_INFO("ExpansionIteration::process start");
 
@@ -42,7 +44,7 @@ bool ExpansionIteration::process(sfmData::SfMData & sfmData, track::TracksHandle
             break;
         }
    
-        if (!_chunkHandler->process(sfmData, tracksHandler, _policy->getNextViews()))
+        if (!_chunkHandler->process(sfmData, tracksHandler, _policy->getNextViews(), expansionMode))
         {
             continue;
         }

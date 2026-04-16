@@ -7,12 +7,14 @@
 
 #pragma once
 
+#include <aliceVision/sfmData/SharedPtrMap.hpp>
 #include <aliceVision/sfmData/CameraPose.hpp>
 #include <aliceVision/sfmData/Landmark.hpp>
 #include <aliceVision/sfmData/Constraint2D.hpp>
 #include <aliceVision/sfmData/ConstraintPoint.hpp>
 #include <aliceVision/sfmData/RotationPrior.hpp>
 #include <aliceVision/sfmData/SurveyPoint.hpp>
+#include <aliceVision/sfmData/ImageGroup.hpp>
 #include <aliceVision/sfmData/View.hpp>
 #include <aliceVision/sfmData/Rig.hpp>
 #include <aliceVision/camera/camera.hpp>
@@ -26,16 +28,19 @@ namespace aliceVision {
 namespace sfmData {
 
 /// Define a collection of View
-using Views = std::map<IndexT, std::shared_ptr<View>>;
+using Views = SharedPtrMap<View>;
+
+/// Define a collection of ImageGroup
+using ImageGroups = SharedPtrMap<ImageGroup>;
 
 /// Define a collection of Image Info
-using ImageInfos = std::map<IndexT, std::shared_ptr<ImageInfo>>;
+using ImageInfos = SharedPtrMap<ImageInfo>;
 
 /// Define a collection of Pose (indexed by view.getPoseId())
-using Poses = std::map<IndexT, CameraPose>;
+using Poses = SharedPtrMap<CameraPose>;
 
 /// Define a collection of IntrinsicParameter (indexed by view.getIntrinsicId())
-using Intrinsics = std::map<IndexT, std::shared_ptr<aliceVision::camera::IntrinsicBase>>;
+using Intrinsics = SharedPtrMap<camera::IntrinsicBase>;
 
 /// Define a collection of landmarks are indexed by their TrackId
 using Landmarks = std::map<IndexT, Landmark>;
@@ -167,6 +172,13 @@ class SfMData
      */
     const RotationPriors& getRotationPriors() const { return _rotationpriors; }
     RotationPriors& getRotationPriors() { return _rotationpriors; }
+
+    /**
+     * @brief Get ImageGroups
+     * @return ImageGroups
+     */
+    const ImageGroups& getImageGroups() const { return _imageGroups; }
+    ImageGroups& getImageGroups() { return _imageGroups; }
 
     /**
      * @brief Get relative features folder paths
@@ -301,7 +313,7 @@ class SfMData
     }
 
     /**
-     * @brief Check if the given view have defined intrinsic and pose
+     * @brief Check if the given view has defined intrinsic and pose
      * @param[in] view The given view
      * @return true if intrinsic  defined
      */
@@ -312,7 +324,7 @@ class SfMData
     }
 
     /**
-     * @brief Check if the given view have defined intrinsic and pose
+     * @brief Check if the given view has defined intrinsic and pose
      * @param[in] viewID The given viewID
      * @return true if intrinsic and pose defined
      */
@@ -322,7 +334,45 @@ class SfMData
     }
 
     /**
-     * @brief Check if the given view have defined intrinsi
+     * @brief Check if the given view has a valid pose
+     * @param[in] view The given view
+     * @return true if pose defined
+     */
+    bool isPoseDefined(const View & view) const
+    {        
+        const IndexT poseId = view.getPoseId();
+        if (poseId == UndefinedIndexT)
+        {
+            return false;
+        }
+        
+        auto it = _poses.find(poseId);
+        if (it == _poses.end())
+        {
+            return false;
+        }
+
+        bool rigValid = ((!view.isPartOfRig() || view.isPoseIndependant() || getRigSubPose(view).status != ERigSubPoseStatus::UNINITIALIZED));
+        if (!rigValid)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @brief Check if the given view has a defined pose
+     * @param[in] viewID The given viewID
+     * @return true if pose defined
+     */
+    bool isPoseDefined(IndexT viewId) const 
+    { 
+        return isPoseDefined(*_views.at(viewId)); 
+    }
+
+    /**
+     * @brief Check if the given view has defined intrinsic
      * @param[in] view The given view
      * @return true if intrinsic and pose defined
      */
@@ -351,11 +401,6 @@ class SfMData
             return false;
         }
 
-        if (it->second.isRotationOnly())
-        {
-            return false;
-        }
-
         bool rigValid = ((!view.isPartOfRig() || view.isPoseIndependant() || getRigSubPose(view).status != ERigSubPoseStatus::UNINITIALIZED));
         if (!rigValid)
         {
@@ -366,7 +411,7 @@ class SfMData
     }
 
     /**
-     * @brief Check if the given view have defined intrinsi
+     * @brief Check if the given view has defined intrinsic
      * @param[in] view The given view
      * @return true if intrinsic and pose defined
      */
@@ -381,11 +426,24 @@ class SfMData
     }
 
     /**
-     * @brief Check if the given view have defined intrinsic and pose
+     * @brief Check if the given view has defined intrinsic and pose
      * @param[in] viewID The given view ID
      * @return true if intrinsic and pose defined
      */
-    bool isPoseAndIntrinsicDefined(IndexT viewId) const { return isPoseAndIntrinsicDefined(_views.at(viewId).get()); }
+    bool isPoseAndIntrinsicDefined(IndexT viewId) const 
+    { 
+        if (viewId == UndefinedIndexT)
+        {
+            return false;
+        }
+
+        if (_views.find(viewId) == _views.end())
+        {
+            return false;
+        }
+
+        return isPoseAndIntrinsicDefined(_views.at(viewId).get()); 
+    }
 
     /**
      * @brief Check if the given view has an existing pose
@@ -400,6 +458,12 @@ class SfMData
      * @return the corresponding view reference
      */
     const View& getView(IndexT viewId) const { return *(_views.at(viewId)); }
+
+    /**
+     * @brief Gives the view of the input view id.
+     * @param[in] viewId The given view ID
+     * @return the corresponding view reference
+     */
     View& getView(IndexT viewId) { return *(_views.at(viewId)); }
 
     /**
@@ -408,6 +472,12 @@ class SfMData
      * @return the corresponding view ptr
      */
     const View::ptr getViewPtr(IndexT viewId) const { return _views.at(viewId).get(); }
+
+    /**
+     * @brief Gives the view of the input view id.
+     * @param[in] viewId The given view ID
+     * @return the corresponding view ptr
+     */
     View::ptr getViewPtr(IndexT viewId) { return _views.at(viewId).get(); }
 
     /**
@@ -416,6 +486,13 @@ class SfMData
      * @return the corresponding view ptr
      */
     View::sptr getViewSharedPtr(IndexT viewId) { return _views.at(viewId); }
+
+    /**
+     * @brief Gives the view of the input view id.
+     * @param[in] viewId The given view ID
+     * @return the corresponding view ptr
+     */
+    const View::sptr getViewSharedPtr(IndexT viewId) const { return _views.at(viewId); }
 
     /**
      * @brief Retrieve the view id in the sfmData from the image filename.
@@ -436,7 +513,7 @@ class SfMData
         // check the view has valid pose / rig etc
         if (!view.isPartOfRig() || view.isPoseIndependant())
         {
-            return _poses.at(view.getPoseId());
+            return *_poses.at(view.getPoseId());
         }
 
         // get the pose of the rig
@@ -452,7 +529,13 @@ class SfMData
      * @brief  Gives the pose with the given pose id.
      * @param[in] poseId The given pose id
      */
-    const CameraPose& getAbsolutePose(IndexT poseId) const { return _poses.at(poseId); }
+    const CameraPose& getAbsolutePose(IndexT poseId) const { return *_poses.at(poseId); }
+
+    /**
+     * @brief  Gives the pose with the given pose id.
+     * @param[in] poseId The given pose id
+     */
+    CameraPose & getAbsolutePose(IndexT poseId) { return *_poses.at(poseId); }
 
     /**
      * @brief Get the rig of the given view
@@ -470,7 +553,7 @@ class SfMData
         std::set<feature::EImageDescriberType> output;
         for (auto s : getLandmarks())
         {
-            output.insert(s.second.descType);
+            output.insert(s.second.getDescType());
         }
         return output;
     }
@@ -480,13 +563,13 @@ class SfMData
         std::map<feature::EImageDescriberType, int> output;
         for (auto s : getLandmarks())
         {
-            if (output.find(s.second.descType) == output.end())
+            if (output.find(s.second.getDescType()) == output.end())
             {
-                output[s.second.descType] = 1;
+                output[s.second.getDescType()] = 1;
             }
             else
             {
-                ++output[s.second.descType];
+                ++output[s.second.getDescType()];
             }
         }
         return output;
@@ -595,7 +678,10 @@ class SfMData
      * @param[in] poseId The given poseId
      * @param[in] pose The given pose
      */
-    void setAbsolutePose(IndexT poseId, const CameraPose& pose) { _poses[poseId] = pose; }
+    void setAbsolutePose(IndexT poseId, const CameraPose& pose) 
+    { 
+        _poses.assign(poseId, pose); 
+    }
 
     /**
      * @brief Erase the pose for the given poseId
@@ -606,9 +692,13 @@ class SfMData
     {
         auto it = _poses.find(poseId);
         if (it != _poses.end())
+        {
             _poses.erase(it);
+        }
         else if (!noThrow)
+        {
             throw std::out_of_range(std::string("Can't erase unfind pose ") + std::to_string(poseId));
+        }
     }
 
     /**
@@ -617,7 +707,9 @@ class SfMData
     void resetRigs()
     {
         for (auto rigIt : _rigs)
+        {
             rigIt.second.reset();
+        }
     }
 
     /**
@@ -634,7 +726,40 @@ class SfMData
      */
     void combine(const SfMData& sfmData);
 
+    /**
+    * @brief Remove everything in this sfmData
+    */
     void clear();
+
+    /**
+    * @brief Remove image groups which are unused
+    */
+    void removeUnusedImageGroups();
+
+    /**
+    * @brief Remove intrinsics which are unused
+    */
+    void removeUnusedIntrinsics();
+
+    /**
+    * @brief Remove poses which are unused
+    */
+    void removeUnusedCameraPoses();
+
+    /**
+    * @brief Remove observations pointing to invalid views
+    */
+    void removeInvalidObservations();
+
+    /**
+    * @brief Remove landmarks without any observations
+    */
+    void removeUnusedLandmarks();
+
+    /**
+    * @brief repair the sfmData by removing everything that is unused or invalid
+    */
+    void repair();
 
     /**
      * @Brief For all required items, update the
@@ -648,6 +773,12 @@ class SfMData
      * @param bbMax the output maximal values of the bounding box
     */
     void getBoundingBox(Eigen::Vector3d & bbMin, Eigen::Vector3d & bbMax);
+
+    /**
+     * Are all views fully estimated ?
+     * @return true if no views have invalid pose or intrinsic
+     */
+    bool isFullyReconstructed() const;
 
   private:
     /// Structure (3D points with their 2D observations)
@@ -676,13 +807,18 @@ class SfMData
     RotationPriors _rotationpriors;
     /// Survey points
     SurveyPoints _surveyPoints;
+    /// Image groups
+    ImageGroups _imageGroups;
 
     /**
      * @brief Get Rig pose of a given camera view
      * @param[in] view The given view
      * @return Rig pose of the given camera view
      */
-    const CameraPose& getRigPose(const View& view) const { return _poses.at(view.getPoseId()); }
+    const CameraPose& getRigPose(const View& view) const 
+    { 
+        return *_poses.at(view.getPoseId()); 
+    }
 
     /**
      * @brief Get Rig subPose of a given camera view
@@ -701,7 +837,10 @@ class SfMData
      * @param[in] view The given view
      * @return Rig pose of the given camera view
      */
-    CameraPose& getRigPose(const View& view) { return _poses.at(view.getPoseId()); }
+    CameraPose& getRigPose(const View& view) 
+    { 
+        return *_poses.at(view.getPoseId()); 
+    }
 
     /**
      * @brief Get Rig subPose of a given camera view

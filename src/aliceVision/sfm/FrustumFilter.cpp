@@ -6,13 +6,15 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <aliceVision/sfm/FrustumFilter.hpp>
+
+#include <aliceVision/config.hpp>
 #include <aliceVision/sfm/sfm.hpp>
 #include <aliceVision/sfmData/SfMData.hpp>
 #include <aliceVision/system/ProgressDisplay.hpp>
 #include <aliceVision/stl/mapUtils.hpp>
 #include <aliceVision/types.hpp>
 #include <aliceVision/geometry/HalfPlane.hpp>
-#include <aliceVision/config.hpp>
+#include <aliceVision/camera/Pinhole.hpp>
 
 #include <fstream>
 
@@ -65,7 +67,7 @@ PairSet FrustumFilter::getFrustumIntersectionPairs() const
     std::transform(z_near_z_far_perView.begin(), z_near_z_far_perView.end(), std::back_inserter(viewIds), stl::RetrieveKey());
 
     auto progressDisplay =
-      system::createConsoleProgressDisplay(viewIds.size() * (viewIds.size() - 1) / 2, std::cout, "\nCompute frustum intersection\n");
+      system::createConsoleProgressDisplay(viewIds.size() * (viewIds.size() - 1) / 2, "\nCompute frustum intersection\n");
 
 // Exhaustive comparison (use the fact that the intersect function is symmetric)
 #pragma omp parallel for
@@ -168,7 +170,7 @@ void FrustumFilter::init_z_near_z_far_depth(const sfmData::SfMData& sfmData, con
         for (sfmData::Landmarks::const_iterator itL = sfmData.getLandmarks().begin(); itL != sfmData.getLandmarks().end(); ++itL)
         {
             const sfmData::Landmark& landmark = itL->second;
-            const Vec3& X = landmark.X;
+            const Vec3& X = landmark.getX();
             for (sfmData::Observations::const_iterator iterO = landmark.getObservations().begin(); iterO != landmark.getObservations().end(); ++iterO)
             {
                 const IndexT id_view = iterO->first;

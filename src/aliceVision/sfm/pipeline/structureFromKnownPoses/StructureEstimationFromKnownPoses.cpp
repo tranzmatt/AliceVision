@@ -7,7 +7,7 @@
 
 #include "StructureEstimationFromKnownPoses.hpp"
 #include <aliceVision/feature/metric.hpp>
-#include <aliceVision/matching/IndMatch.hpp>
+#include <aliceVision/matching/MatchesCollections.hpp>
 #include <aliceVision/matching/guidedMatching.hpp>
 #include <aliceVision/multiview/relativePose/FundamentalError.hpp>
 #include <aliceVision/multiview/triangulation/Triangulation.hpp>
@@ -15,6 +15,7 @@
 #include <aliceVision/track/TracksBuilder.hpp>
 #include <aliceVision/sfm/sfmTriangulation.hpp>
 #include <aliceVision/system/ProgressDisplay.hpp>
+#include <aliceVision/camera/Pinhole.hpp>
 #include <aliceVision/config.hpp>
 
 namespace aliceVision {
@@ -74,7 +75,7 @@ void StructureEstimationFromKnownPoses::match(const SfMData& sfmData,
                                               const feature::RegionsPerView& regionsPerView,
                                               double geometricErrorMax)
 {
-    auto progressDisplay = system::createConsoleProgressDisplay(pairs.size(), std::cout, "Compute pairwise fundamental guided matching:\n");
+    auto progressDisplay = system::createConsoleProgressDisplay(pairs.size(), "Compute pairwise fundamental guided matching:\n");
 
 #pragma omp parallel
     for (PairSet::const_iterator it = pairs.begin(); it != pairs.end(); ++it)
@@ -173,7 +174,7 @@ void StructureEstimationFromKnownPoses::filter(const SfMData& sfmData, const Pai
     const Triplets triplets = graph::tripletListing(pairs);
 
     auto progressDisplay =
-      system::createConsoleProgressDisplay(triplets.size(), std::cout, "Per triplet tracks validation (discard spurious correspondences):\n");
+      system::createConsoleProgressDisplay(triplets.size(), "Per triplet tracks validation (discard spurious correspondences):\n");
 #pragma omp parallel
     for (Triplets::const_iterator it = triplets.begin(); it != triplets.end(); ++it)
     {

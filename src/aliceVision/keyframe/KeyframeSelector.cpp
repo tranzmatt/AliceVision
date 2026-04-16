@@ -6,8 +6,10 @@
 
 #include "KeyframeSelector.hpp"
 #include <aliceVision/sfmDataIO/viewIO.hpp>
+#include <aliceVision/sfmData/ImageSet.hpp>
 #include <aliceVision/system/Logger.hpp>
 #include <aliceVision/utils/filesIO.hpp>
+#include <aliceVision/camera/Pinhole.hpp>
 
 #include <random>
 #include <tuple>
@@ -1271,6 +1273,14 @@ bool KeyframeSelector::writeSfMDataFromSfMData(const std::string& mediaPath)
         return false;
     }
 
+    // Copy image groups into imageSets
+    for (const auto & [imageGroupID, _] : inputSfm.getImageGroups())
+    {
+        auto imageGroupPtr = std::make_shared<sfmData::ImageSet>();
+        _outputSfmKeyframes.getImageGroups().emplace(imageGroupID, imageGroupPtr);
+        _outputSfmFrames.getImageGroups().emplace(imageGroupID, imageGroupPtr);
+    }
+
     // Order the views according to the frame ID and the intrinsics serial number
     std::map<std::string, std::vector<std::shared_ptr<sfmData::View>>> viewSequences;
     auto& intrinsics = inputSfm.getIntrinsics();
@@ -1303,7 +1313,7 @@ bool KeyframeSelector::writeSfMDataFromSfMData(const std::string& mediaPath)
             _selectedFrames[i] = '1';
 
             //Make sure to keep the pose
-            keyframesPoses.emplace(poseId, inputSfm.getPoses().at(poseId));
+            keyframesPoses.assign(poseId, inputSfm.getAbsolutePose(poseId));
         }
 
         if (_selectedFrames[i] == '1')
@@ -1474,7 +1484,7 @@ std::shared_ptr<sfmData::View> KeyframeSelector::createView(const std::string& i
     // Complete the View attributes
     sfmDataIO::EViewIdMethod viewIdMethod = sfmDataIO::EViewIdMethod::METADATA;
     std::string viewIdRegex = ".*?(\\d+)";
-    sfmDataIO::updateIncompleteView(*(view.get()), viewIdMethod, viewIdRegex);
+    sfmDataIO::bootstrapView(*(view.get()), viewIdMethod, viewIdRegex);
 
     // Set the frame ID
     IndexT frameId;
@@ -1505,7 +1515,7 @@ std::shared_ptr<camera::IntrinsicBase> KeyframeSelector::createIntrinsic(const s
     {
         mode = camera::EInitMode::UNKNOWN;
     }
-    
+
     auto intrinsic = sfmDataIO::getViewIntrinsic(view, mode, focalLength, sensorWidth);
     if (imageRatio > 1.0 && sensorWidth > -1.0)
     {

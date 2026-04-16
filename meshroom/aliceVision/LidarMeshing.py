@@ -4,19 +4,17 @@ from meshroom.core import desc
 from meshroom.core.utils import VERBOSE_LEVEL
 
 class LidarMeshing(desc.AVCommandLineNode):
-    commandLine = 'aliceVision_lidarMeshing {allParams}'
+    commandLine = "aliceVision_lidarMeshing {allParams}"
 
     size = desc.StaticNodeSize(10)
     parallelization = desc.Parallelization(blockSize=1)
-    commandLineRange = '--rangeStart {rangeStart} --rangeSize {rangeFullSize}'
+    commandLineRange = "--rangeStart {rangeStart} --rangeSize {rangeFullSize}"
 
     cpu = desc.Level.INTENSIVE
     ram = desc.Level.INTENSIVE
 
-    category = 'Dense Reconstruction'
-    documentation = '''
-    This node creates a dense geometric surface representation of the Lidar measurements.
-    '''
+    category = "Dense Reconstruction"
+    documentation = """This node creates a dense geometric surface representation of the Lidar measurements."""
 
     inputs = [
         desc.File(
@@ -32,18 +30,18 @@ class LidarMeshing(desc.AVCommandLineNode):
                         "If enabled, it takes priority over the 'Estimate Space From SfM' option.\n"
                         "Parameters can be adjusted in advanced settings.",
             value=False,
-            group="",
+            commandLineGroup="",
         ),
         desc.GroupAttribute(
             name="boundingBox",
             label="Bounding Box Settings",
             description="Translation, rotation and scale of the bounding box.",
-            groupDesc=[
+            items=[
                 desc.GroupAttribute(
                     name="bboxTranslation",
                     label="Translation",
                     description="Position in space.",
-                    groupDesc=[
+                    items=[
                         desc.FloatParam(
                             name="x", label="x", description="X offset.",
                             value=0.0,
@@ -66,7 +64,7 @@ class LidarMeshing(desc.AVCommandLineNode):
                     name="bboxRotation",
                     label="Euler Rotation",
                     description="Rotation in Euler degrees.",
-                    groupDesc=[
+                    items=[
                         desc.FloatParam(
                             name="x", label="x", description="Euler X rotation.",
                             value=0.0,
@@ -89,7 +87,7 @@ class LidarMeshing(desc.AVCommandLineNode):
                     name="bboxScale",
                     label="Scale",
                     description="Scale of the bounding box.",
-                    groupDesc=[
+                    items=[
                         desc.FloatParam(
                             name="x", label="x", description="X scale.",
                             value=1.0,

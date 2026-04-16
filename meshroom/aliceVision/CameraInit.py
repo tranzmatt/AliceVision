@@ -1,4 +1,4 @@
-__version__ = "12.0"
+__version__ = "12.1"
 
 import os
 import json
@@ -188,7 +188,7 @@ Intrinsic = [
         name="principalPoint",
         label="Principal Point",
         description="Position of the optical center in the image (i.e. the sensor surface).",
-        groupDesc=[
+        items=[
             desc.FloatParam(
                 name="x",
                 label="x",
@@ -243,7 +243,7 @@ Intrinsic = [
         name="undistortionOffset",
         label="Undistortion Offset",
         description="Undistortion offset.",
-        groupDesc=[
+        items=[
             desc.FloatParam(
                 name="x",
                 label="x",
@@ -356,11 +356,11 @@ The needed metadata are:
                 name="viewpoint",
                 label="Viewpoint",
                 description="Viewpoint.",
-                groupDesc=Viewpoint,
+                items=Viewpoint,
             ),
             label="Viewpoints",
             description="Input viewpoints.",
-            group="",
+            commandLineGroup="",
         ),
         desc.ListAttribute(
             name="intrinsics",
@@ -368,11 +368,11 @@ The needed metadata are:
                 name="intrinsic",
                 label="Intrinsic",
                 description="Intrinsic.",
-                groupDesc=Intrinsic,
+                items=Intrinsic,
             ),
             label="Intrinsics",
             description="Camera intrinsics.",
-            group="",
+            commandLineGroup="",
         ),
         desc.File(
             name="sensorDatabase",
@@ -472,6 +472,12 @@ The needed metadata are:
             invalidate=False,
             advanced=True,
             enabled=lambda node: node.viewIdMethod.value == "filename",
+        ),
+        desc.BoolParam(
+            name="isSequence",
+            label="Images are a sequence",
+            description="The images provided as input are part of a sequence with temporal coherency.",
+            value=False,
         ),
         desc.ChoiceParam(
             name="verboseLevel",
@@ -665,13 +671,13 @@ The needed metadata are:
                     view['metadata'] = json.loads(view['metadata'])
 
             sfmData = {
-                "version": [1, 2, 12],
+                "version": [1, 2, 13],
                 "views": views + newViews,
                 "intrinsics": intrinsics,
                 "featureFolder": "",
                 "matchingFolder": "",
             }
-            node.viewpointsFile = os.path.join(node.internalFolder, 'viewpoints.sfm').format(**node._cmdVars)
+            node.viewpointsFile = os.path.join(node.internalFolder, 'viewpoints.sfm')
             with open(node.viewpointsFile, 'w') as f:
                 json.dump(sfmData, f, indent=4)
 

@@ -1,9 +1,10 @@
-__version__ = "4.1"
+__version__ = "4.2"
 
 import json
 
 from meshroom.core import desc
 from meshroom.core.utils import COLORSPACES, EXR_STORAGE_DATA_TYPE, VERBOSE_LEVEL
+from pyalicevision import parallelization as avpar
 
 def findMetadata(d, keys, defaultValue):
     v = None
@@ -24,15 +25,13 @@ def findMetadata(d, keys, defaultValue):
 
 
 class LdrToHdrMerge(desc.AVCommandLineNode):
-    commandLine = 'aliceVision_LdrToHdrMerge {allParams}'
-    size = desc.DynamicNodeSize('input')
+    commandLine = "aliceVision_LdrToHdrMerge {allParams}"
+    size = avpar.DynamicDividedViewsSize("input", "nbBrackets")
     parallelization = desc.Parallelization(blockSize=2)
-    commandLineRange = '--rangeStart {rangeStart} --rangeSize {rangeBlockSize}'
+    commandLineRange = "--rangeStart {rangeStart} --rangeSize {rangeBlockSize}"
 
-    category = 'Panorama HDR'
-    documentation = '''
-Merge LDR images into HDR images.
-'''
+    category = "Panorama HDR"
+    documentation = """Merge LDR images into HDR images."""
 
     inputs = [
         desc.File(
@@ -47,6 +46,12 @@ Merge LDR images into HDR images.
             description="Response file.",
             value="",
         ),
+        desc.File(
+            name="luminanceStatistics",
+            label="Luminance Statistics",
+            description="File containing the luminance statistics produced by the calibration process",
+            value="",
+        ),
         desc.IntParam(
             name="userNbBrackets",
             label="Number Of Brackets",
@@ -54,7 +59,7 @@ Merge LDR images into HDR images.
             value=0,
             range=(0, 15, 1),
             invalidate=False,
-            group="user",  # not used directly on the command line
+            commandLineGroup="user",  # not used directly on the command line
             errorMessage="The set number of brackets is not a multiple of the number of input images.\n"
                          "Errors will occur during the computation.",
             exposed=True,
@@ -67,14 +72,14 @@ Merge LDR images into HDR images.
                         "is 0, else it is equal to 'userNbBrackets'.",
             value=0,
             range=(0, 15, 1),
-            group="bracketsParams",
+            commandLineGroup="bracketsParams",
         ),
         desc.BoolParam(
             name="offsetRefBracketIndexEnabled",
             label="Manually Specify Ref Bracket",
             description="Manually specify the reference bracket index to control the exposure of the HDR image.",
             value=False,
-            group="user",  # not used directly on the command line
+            commandLineGroup="user",  # not used directly on the command line
         ),
         desc.IntParam(
             name="offsetRefBracketIndex",
@@ -166,7 +171,7 @@ Merge LDR images into HDR images.
             label="Enable Highlight",
             description="Enable highlights correction.",
             value=False,
-            group="user",  # not used directly on the command line
+            commandLineGroup="user",  # not used directly on the command line
             enabled=lambda node: node.byPass.enabled and not node.byPass.value,
         ),
         desc.FloatParam(
@@ -229,7 +234,7 @@ Merge LDR images into HDR images.
             label="Folder",
             description="Path to the folder containing the merged HDR images.",
             value="{nodeCacheFolder}",
-            group="",  # do not export on the command line
+            commandLineGroup="",  # do not export on the command line
         ),
         desc.File(
             name="outSfMData",
@@ -251,7 +256,7 @@ Merge LDR images into HDR images.
             return
         node.userNbBrackets.validValue = True  # Reset the status of "userNbBrackets"
 
-        cameraInitOutput = node.input.getLinkParam(recursive=True)
+        cameraInitOutput = node.input.inputRootLink
         if not cameraInitOutput:
             node.nbBrackets.value = 0
             return
@@ -269,7 +274,7 @@ Merge LDR images into HDR images.
 
         if not cameraInitOutput.node.hasAttribute("viewpoints"):
             if cameraInitOutput.node.hasAttribute("input"):
-                cameraInitOutput = cameraInitOutput.node.input.getLinkParam(recursive=True)
+                cameraInitOutput = cameraInitOutput.node.input.inputRootLink
         if cameraInitOutput and cameraInitOutput.node and cameraInitOutput.node.hasAttribute("viewpoints"):
             viewpoints = cameraInitOutput.node.viewpoints.value
         else:

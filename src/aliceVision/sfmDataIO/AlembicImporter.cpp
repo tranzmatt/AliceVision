@@ -14,6 +14,9 @@
 #include <aliceVision/version.hpp>
 #include <aliceVision/system/Logger.hpp>
 
+#include <aliceVision/camera/Equidistant.hpp>
+#include <aliceVision/sfmData/ImageSet.hpp>
+
 namespace aliceVision {
 namespace sfmDataIO {
 
@@ -186,6 +189,44 @@ bool readPointCloud(const Version& abcVersion, IObject iObj, M44d mat, sfmData::
         }
     }
 
+    BoolArraySamplePtr sampleIsParallaxRobust;
+    if (userProps && userProps.getPropertyHeader("mvg_isParallaxRobust"))
+    {
+        IBoolArrayProperty propIsParallaxRobust(userProps, "mvg_isParallaxRobust");
+        propIsParallaxRobust.get(sampleIsParallaxRobust);
+
+        if (sampleIsParallaxRobust->size() != positions->size())
+        {
+            ALICEVISION_LOG_WARNING("[Alembic Importer] isParallaxRobust property will be ignored.");
+            sampleIsParallaxRobust->reset();
+        }
+    }
+
+    BoolArraySamplePtr sampleIsLocked;
+    if (userProps && userProps.getPropertyHeader("mvg_isLocked"))
+    {
+        IBoolArrayProperty propIsLocked(userProps, "mvg_isLocked");
+        propIsLocked.get(sampleIsLocked);
+
+        if (sampleIsLocked->size() != positions->size())
+        {
+            ALICEVISION_LOG_WARNING("[Alembic Importer] isLocked property will be ignored.");
+            sampleIsLocked->reset();
+        }
+    }
+    
+    AV_UInt32ArraySamplePtr sampleReferenceViewIndices;
+    if (userProps && userProps.getPropertyHeader("mvg_referenceViewIndices"))
+    {
+        sampleReferenceViewIndices.read(userProps, "mvg_referenceViewIndices");
+        if (sampleReferenceViewIndices.size() != positions->size())
+        {
+            ALICEVISION_LOG_WARNING("[Alembic Importer] Reference views will be ignored. Vector size: "
+                                    << sampleReferenceViewIndices.size() << ", positions vector size: " << positions->size());
+            sampleReferenceViewIndices.reset();
+        }
+    }
+
     // Number of points before adding the Alembic data
     const std::size_t nbPointsInit = sfmdata.getLandmarks().size();
     for (std::size_t point3d_i = 0; point3d_i < positions->size(); ++point3d_i)
@@ -207,15 +248,37 @@ bool readPointCloud(const Version& abcVersion, IObject iObj, M44d mat, sfmData::
         if (sampleColors)
         {
             const P3fArraySamplePtr::element_type::value_type& color_i = sampleColors->get()[point3d_i];
-            landmark.rgb = image::RGBColor(static_cast<unsigned char>(color_i[0] * 255.0f),
-                                           static_cast<unsigned char>(color_i[1] * 255.0f),
-                                           static_cast<unsigned char>(color_i[2] * 255.0f));
+            landmark.setRgb(image::RGBColor(static_cast<unsigned char>(color_i[0] * 255.0f),
+                                            static_cast<unsigned char>(color_i[1] * 255.0f),
+                                            static_cast<unsigned char>(color_i[2] * 255.0f)));
         }
 
         if (sampleDescs)
         {
             const std::size_t descType_i = sampleDescs[point3d_i];
-            landmark.descType = static_cast<feature::EImageDescriberType>(descType_i);
+            landmark.setDescType(static_cast<feature::EImageDescriberType>(descType_i));
+        }
+
+        if (sampleIsParallaxRobust)
+        {
+            const bool isParallaxRobust = sampleIsParallaxRobust->get()[point3d_i];
+            landmark.setParallaxRobust(isParallaxRobust);
+        }
+
+        if (sampleIsLocked)
+        {
+            const bool isLocked = sampleIsLocked->get()[point3d_i];
+            landmark.setLocked(isLocked);
+        }
+
+        if (sampleReferenceViewIndices)
+        {
+            IndexT referenceViewIndex = sampleReferenceViewIndices[point3d_i];
+            if (referenceViewIndex != UndefinedIndexT)
+            {
+                sfmData::View::sptr view = sfmdata.getViews().at(referenceViewIndex);
+                landmark.setReferenceView(view);
+            }
         }
     }
 
@@ -293,6 +356,7 @@ bool readPointCloud(const Version& abcVersion, IObject iObj, M44d mat, sfmData::
         AV_UInt32ArraySamplePtr sampleVisibilityFeatId;
         FloatArraySamplePtr sampleVisibilityFeatPos;
         FloatArraySamplePtr sampleVisibilityFeatScale;
+        FloatArraySamplePtr sampleVisibilityFeatDepth;
 
         if (userProps.getPropertyHeader("mvg_visibilityFeatId") && userProps.getPropertyHeader("mvg_visibilityFeatPos") &&
             flags_part & ESfMData::OBSERVATIONS_WITH_FEATURES)
@@ -306,6 +370,12 @@ bool readPointCloud(const Version& abcVersion, IObject iObj, M44d mat, sfmData::
             {
                 IFloatArrayProperty propVisibilityFeatScale(userProps, "mvg_visibilityFeatScale");
                 propVisibilityFeatScale.get(sampleVisibilityFeatScale);
+            }
+
+            if (userProps && userProps.getPropertyHeader("mvg_visibilityFeatDepth"))
+            {
+                IFloatArrayProperty propVisibilityFeatDepth(userProps, "mvg_visibilityFeatDepth");
+                propVisibilityFeatDepth.get(sampleVisibilityFeatDepth);
             }
 
             if (sampleVisibilityViewId.size() != sampleVisibilityFeatId.size() ||
@@ -361,6 +431,11 @@ bool readPointCloud(const Version& abcVersion, IObject iObj, M44d mat, sfmData::
                     {
                         observation.setScale((*sampleVisibilityFeatScale)[obsGlobalIndex]);
                     }
+
+                    if (sampleVisibilityFeatDepth)
+                    {
+                        observation.setDepth((*sampleVisibilityFeatDepth)[obsGlobalIndex]);
+                    }
                 }
                 else
                 {
@@ -394,7 +469,7 @@ bool readSurveys(IObject iObj, sfmData::SfMData& sfmdata)
     IDoubleArrayProperty propData(userProps, "mvg_surveyData");
     propData.get(sampleData);
 
-    const int sampleDataSize = 5;
+    const int sampleDataSize = 7;
 
     if (sampleId.size() * sampleDataSize != sampleData->size())
     {
@@ -412,6 +487,8 @@ bool readSurveys(IObject iObj, sfmData::SfMData& sfmdata)
         pt.point3d.z() = (*sampleData)[pos * sampleDataSize + 2];
         pt.survey.x() = (*sampleData)[pos * sampleDataSize + 3];
         pt.survey.y() = (*sampleData)[pos * sampleDataSize + 4];
+        pt.residual.x() = (*sampleData)[pos * sampleDataSize + 5];
+        pt.residual.y() = (*sampleData)[pos * sampleDataSize + 6];
 
         output[viewId].push_back(pt);
     }
@@ -462,6 +539,8 @@ bool readCamera(const Version& abcVersion,
     IndexT subPoseId = UndefinedIndexT;
     IndexT frameId = UndefinedIndexT;
     IndexT resectionId = UndefinedIndexT;
+    IndexT imageGroupId = UndefinedIndexT;
+    std::string mvg_imageGroupType = sfmData::ImageGroup::typeToString(sfmData::ImageGroup::Type::ImageSet);
     bool intrinsicLocked = false;
     bool poseLocked = false;
     bool rotationOnly = false;
@@ -510,6 +589,10 @@ bool readCamera(const Version& abcVersion,
             if (const Alembic::Abc::PropertyHeader* propHeader = userProps.getPropertyHeader("mvg_frameId"))
             {
                 frameId = getAbcProp_uint(userProps, *propHeader, "mvg_frameId", sampleFrame);
+            }
+            if (const Alembic::Abc::PropertyHeader* propHeader = userProps.getPropertyHeader("mvg_imageGroupId"))
+            {
+                imageGroupId = getAbcProp_uint(userProps, *propHeader, "mvg_imageGroupId", sampleFrame);
             }
             if (const Alembic::Abc::PropertyHeader* propHeader = userProps.getPropertyHeader("mvg_resectionId"))
             {
@@ -581,6 +664,10 @@ bool readCamera(const Version& abcVersion,
             else
             {
                 sensorSize_mm = {24.0, 36.0};
+            }
+            if (const Alembic::Abc::PropertyHeader* propHeader = userProps.getPropertyHeader("mvg_imageGroupType"))
+            {
+                mvg_imageGroupType = getAbcProp<Alembic::Abc::IStringProperty>(userProps, *propHeader, "mvg_imageGroupType", sampleFrame);
             }
             if (const Alembic::Abc::PropertyHeader* propHeader = userProps.getPropertyHeader("mvg_intrinsicType"))
             {
@@ -808,6 +895,7 @@ bool readCamera(const Version& abcVersion,
     {
         view->setResectionId(resectionId);
         view->setFrameId(frameId);
+        view->setImageGroupId(imageGroupId);
         view->setIndependantPose(poseIndependant);
 
         // set metadata
@@ -823,6 +911,13 @@ bool readCamera(const Version& abcVersion,
         }
 
         sfmData.getViews().emplace(viewId, view);
+    }
+
+    if (flagsPart & ESfMData::VIEWS && imageGroupId != UndefinedIndexT)
+    {
+        sfmData::ImageGroup::Type type = sfmData::ImageGroup::stringToType(mvg_imageGroupType);
+        sfmData::ImageGroup::sptr group = sfmData::ImageGroup::create(type);
+        sfmData.getImageGroups().emplace(imageGroupId, group);
     }
 
     if ((flagsPart & ESfMData::EXTRINSICS) && isReconstructed)
@@ -1033,7 +1128,7 @@ bool readXform(const Version& abcVersion, IXform& xform, M44d& mat, sfmData::SfM
 
         if (sfmData.getPoses().find(poseId) == sfmData.getPoses().end())
         {
-            sfmData.getPoses().emplace(poseId, sfmData::CameraPose(pose, rigPoseLocked));
+            sfmData.getPoses().assign(poseId, sfmData::CameraPose(pose, rigPoseLocked));
         }
     }
 

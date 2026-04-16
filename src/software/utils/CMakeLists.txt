@@ -19,23 +19,21 @@ endif()
 if (ALICEVISION_BUILD_SFM)
     # Uncertainty
     if (ALICEVISION_HAVE_UNCERTAINTYTE)
-        alicevision_add_software(aliceVision_computeUncertainty
-            SOURCE main_computeUncertainty.cpp
-            FOLDER ${FOLDER_SOFTWARE_UTILS}
-            LINKS aliceVision_sfm
-                  aliceVision_system
-                  aliceVision_cmdline
-                  ${CUDA_LIBRARIES}
-                  ${CUDA_CUBLAS_LIBRARIES}
-                  ${CUDA_cusparse_LIBRARY}
-                  ${UNCERTAINTYTE_LIBRARY}
-                  Boost::program_options
-            INCLUDE_DIRS ${UNCERTAINTYTE_INCLUDE_DIR}
-        )
-        # message(warning "UNCERTAINTYTE_LIBRARY: ${UNCERTAINTYTE_LIBRARY}")
-        # message(warning "CUDA_LIBRARIES: ${CUDA_LIBRARIES}")
-        # message(warning "CUDA_CUBLAS_LIBRARIES: ${CUDA_CUBLAS_LIBRARIES}")
-        # message(warning "CUDA_cusparse_LIBRARY: ${CUDA_cusparse_LIBRARY}")
+        if (ALICEVISION_HAVE_CUDA)
+            alicevision_add_software(aliceVision_computeUncertainty
+                SOURCE main_computeUncertainty.cpp
+                FOLDER ${FOLDER_SOFTWARE_UTILS}
+                LINKS aliceVision_sfm
+                    aliceVision_system
+                    aliceVision_cmdline
+                    CUDA::cudart
+                    CUDA::cublas
+                    CUDA::cusparse
+                    ${UNCERTAINTYTE_LIBRARY}
+                    Boost::program_options
+                INCLUDE_DIRS ${UNCERTAINTYTE_INCLUDE_DIR}
+            )
+        endif()
     endif()
 
     alicevision_add_software(aliceVision_imageProcessing 
@@ -50,6 +48,7 @@ if (ALICEVISION_BUILD_SFM)
               aliceVision_sfmData
               aliceVision_sfmDataIO
               aliceVision_lensCorrectionProfile
+              aliceVision_imageProcessing
               ${Boost_LIBRARIES}
     )
 
@@ -59,6 +58,37 @@ if (ALICEVISION_BUILD_SFM)
         LINKS aliceVision_system
               aliceVision_cmdline
               aliceVision_image
+              ${Boost_LIBRARIES}
+    )
+
+    alicevision_add_software(aliceVision_listImages 
+        SOURCE main_listImages.cpp
+        FOLDER ${FOLDER_SOFTWARE_UTILS}
+        LINKS aliceVision_system
+              aliceVision_cmdline
+              aliceVision_sfmData
+              aliceVision_sfmDataIO
+              ${Boost_LIBRARIES}
+    )
+
+    alicevision_add_software(aliceVision_maskEroding 
+        SOURCE main_maskEroding.cpp
+        FOLDER ${FOLDER_SOFTWARE_UTILS}
+        LINKS aliceVision_system
+              aliceVision_cmdline
+              aliceVision_image
+              ${Boost_LIBRARIES}
+    )
+
+    alicevision_add_software(aliceVision_maskRandomApplying 
+        SOURCE main_maskRandomApplying.cpp
+        FOLDER ${FOLDER_SOFTWARE_UTILS}
+        LINKS aliceVision_system
+              aliceVision_cmdline
+              aliceVision_image
+              aliceVision_sfm
+              aliceVision_sfmData
+              aliceVision_sfmDataIO
               ${Boost_LIBRARIES}
     )
 
@@ -72,6 +102,21 @@ if (ALICEVISION_BUILD_SFM)
               aliceVision_sfm
               aliceVision_sfmData
               aliceVision_track
+              Boost::program_options
+              Boost::json
+    )
+
+
+    # Track from depthmap
+    alicevision_add_software(aliceVision_depthmapTracksInjecting
+        SOURCE main_depthmapTracksInjecting.cpp
+        FOLDER ${FOLDER_SOFTWARE_UTILS}
+        LINKS aliceVision_system
+              aliceVision_cmdline
+              aliceVision_sfmData
+              aliceVision_sfmDataIO
+              aliceVision_track
+              aliceVision_image
               Boost::program_options
               Boost::json
     )
@@ -162,19 +207,6 @@ if (ALICEVISION_BUILD_SFM)
                   Alembic::Alembic
         )
 
-        # Transform rig
-        alicevision_add_software(aliceVision_rigTransform
-            SOURCE main_rigTransform.cpp
-            FOLDER ${FOLDER_SOFTWARE_UTILS}
-            LINKS aliceVision_sfmData
-                  aliceVision_sfmDataIO
-                  aliceVision_localization
-                  aliceVision_dataio
-                  aliceVision_rig
-                  aliceVision_system
-                  aliceVision_cmdline
-                  Boost::program_options
-        )
 
         # Output intrinsics transformed images
         alicevision_add_software(aliceVision_exportImages
@@ -259,19 +291,6 @@ if (ALICEVISION_BUILD_SFM)
         )
     endif()
 
-    # SfM filter
-    alicevision_add_software(aliceVision_sfmFilter
-        SOURCE main_sfmFilter.cpp
-        FOLDER ${FOLDER_SOFTWARE_UTILS}
-        LINKS aliceVision_system
-            aliceVision_cmdline
-            aliceVision_feature
-            aliceVision_sfm
-            aliceVision_sfmData
-            aliceVision_sfmDataIO
-            Boost::program_options
-    )
-
     # SfM to rig
     alicevision_add_software(aliceVision_sfmToRig
         SOURCE main_sfmToRig.cpp
@@ -317,8 +336,9 @@ if (ALICEVISION_BUILD_SFM)
               aliceVision_sfm
               Boost::program_options
               Boost::json
+              Alembic::Alembic
     )
-
+    
     # SfM Survey Injecting
     alicevision_add_software(aliceVision_sfmSurveyInjecting
         SOURCE main_sfmSurveyInjecting.cpp
@@ -340,6 +360,20 @@ if (ALICEVISION_BUILD_SFM)
               aliceVision_cmdline
               aliceVision_sfmData
               aliceVision_sfmDataIO
+              aliceVision_sfm
+              Boost::program_options
+              Boost::json
+    )
+
+    # Track from depthmap
+    alicevision_add_software(aliceVision_sfmLandmarksRemapping
+        SOURCE main_sfmLandmarksRemapping.cpp
+        FOLDER ${FOLDER_SOFTWARE_UTILS}
+        LINKS aliceVision_system
+              aliceVision_cmdline
+              aliceVision_sfmData
+              aliceVision_sfmDataIO
+              aliceVision_track
               aliceVision_sfm
               Boost::program_options
               Boost::json
@@ -492,6 +526,20 @@ if (ALICEVISION_BUILD_MVS)
         endif()
     endif()
 
+
+    # Add random noise to SfMData pose
+    alicevision_add_software(aliceVision_addPoseNoise
+        SOURCE main_addPoseNoise.cpp
+        FOLDER ${FOLDER_SOFTWARE_UTILS}
+        LINKS aliceVision_system
+              aliceVision_cmdline
+              aliceVision_numeric
+              aliceVision_sfm
+              aliceVision_sfmData
+              aliceVision_sfmDataIO
+              aliceVision_mvsUtils
+              ${Boost_LIBRARIES}
+    )
 
     # Create SfMData with some arbitrary data
     alicevision_add_software(aliceVision_generateSampleScene

@@ -7,11 +7,11 @@
 #include <aliceVision/image/io.hpp>
 #include <aliceVision/sfmData/Landmark.hpp>
 #include <aliceVision/sfmDataIO/sfmDataIO.hpp>
-
+#include <aliceVision/camera/Pinhole.hpp>
 #include <aliceVision/numeric/projection.hpp>
 #include <aliceVision/numeric/numeric.hpp>
+#include <aliceVision/system/Logger.hpp>
 
-#include <iostream>
 #include <sstream>
 #include <fstream>
 #include <algorithm>
@@ -95,10 +95,10 @@ void normalIntegration(const sfmData::SfMData& sfmData,
 
     if (sfmData.getPoses().size() > 0)
     {
-        for (auto& poseIt : sfmData.getPoses())
+        for (auto& [idPose, cameraPose] : sfmData.getPoses().valueRange())
         {
             // Read associated normal map :
-            image::readImage(inputPath + "/" + std::to_string(poseIt.first) + "_normals.png", normalsImPNG, image::EImageColorSpace::NO_CONVERSION);
+            image::readImage(inputPath + "/" + std::to_string(idPose) + "_normals.png", normalsImPNG, image::EImageColorSpace::NO_CONVERSION);
 
             int nbCols = normalsImPNG.cols();
             int nbRows = normalsImPNG.rows();
@@ -107,7 +107,7 @@ void normalIntegration(const sfmData::SfMData& sfmData,
             for (auto& viewIt : sfmData.getViews())
             {
                 poseId = viewIt.second->getPoseId();
-                if (poseId == poseIt.first)
+                if (poseId == idPose)
                 {
                     viewId = viewIt.first;
                     // Get intrinsics associated with this view :
@@ -184,10 +184,10 @@ void normalIntegration(const sfmData::SfMData& sfmData,
             // AliceVision uses distance-to-origin convention
             convertZtoDistance(depthMap, distanceMap, K);
 
-            std::string pathToDM = outputFolder + "/" + std::to_string(poseIt.first) + "_depthMap.exr";
+            std::string pathToDM = outputFolder + "/" + std::to_string(idPose) + "_depthMap.exr";
 
             // Create pose for metadata
-            const geometry::Pose3 pose = poseIt.second.getTransform();
+            const geometry::Pose3 pose = cameraPose.getTransform();
             std::shared_ptr<camera::IntrinsicBase> cam = sfmData.getIntrinsics().at(intrinsicId);
             std::shared_ptr<camera::Pinhole> camPinHole = std::dynamic_pointer_cast<camera::Pinhole>(cam);
             Mat34 P = camPinHole->getProjectiveEquivalent(pose);
@@ -541,7 +541,7 @@ void adjustScale(const sfmData::SfMData& sfmData, image::Image<float>& initDepth
     {
         size_t currentLandmarkIndex = visibleLandmarks.at(i);
         const sfmData::Landmark& currentLandmark = landmarks.at(currentLandmarkIndex);
-        knownDepths(i) = pose.depth(currentLandmark.X);
+        knownDepths(i) = pose.depth(currentLandmark.getX());
 
         sfmData::Observation observationInCurrentPicture = currentLandmark.getObservations().at(viewID);
 
@@ -583,7 +583,7 @@ void getZ0FromLandmarks(const sfmData::SfMData& sfmData,
 
         if (mask(rowInd, colInd) > 0.7)
         {
-            z0(rowInd, colInd) = pose.depth(currentLandmark.X);
+            z0(rowInd, colInd) = pose.depth(currentLandmark.getX());
             maskZ0(rowInd, colInd) = 1.0;
         }
     }
@@ -597,7 +597,7 @@ void smoothIntegration(const image::Image<image::RGBfColor>& normals,
                        const image::Image<float>& z0,
                        const image::Image<float>& maskZ0)
 {
-    std::cout << "WIP" << std::endl;
+    ALICEVISION_LOG_INFO("WIP: frankot_chellappa with calibration not yet implemented.");
 }
 
 void convertZtoDistance(const aliceVision::image::Image<float>& zMap, aliceVision::image::Image<float>& distanceMap, const Eigen::Matrix3f& K)

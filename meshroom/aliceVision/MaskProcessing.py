@@ -2,8 +2,7 @@ __version__ = "1.0"
 
 from meshroom.core import desc
 from meshroom.core.utils import DESCRIBER_TYPES, VERBOSE_LEVEL
-
-import os.path
+from pyalicevision import parallelization as avpar
 
 class MaskProcessingNodeSize(desc.DynamicNodeSize):
     """
@@ -13,27 +12,25 @@ class MaskProcessingNodeSize(desc.DynamicNodeSize):
     def __init__(self, param):
         self._params = param
 
-    def computeSize(self, node):
-        
+    def __call__(self, node):
+
         size = 0
 
         for input in node.attribute(self._params).value:
-            paramName = input.getFullName()
+            paramName = input.fullName
             param = node.attribute(paramName)
             if param.isLink:
-                size = max(size, param.getLinkParam().node.size)
-        
+                size = max(size, param.inputLink.node.size)
+
         return size
 
 
 class MaskProcessing(desc.AVCommandLineNode):
-    commandLine = 'aliceVision_maskProcessing {allParams}'
+    commandLine = "aliceVision_maskProcessing {allParams}"
     size = MaskProcessingNodeSize("inputs")
 
-    category = 'Utils'
-    documentation = '''
-    Perform operations on a list of masks with the same names
-    '''
+    category = "Utils"
+    documentation = """Perform operations on a list of masks with the same names."""
 
     inputs = [
         desc.ListAttribute(
@@ -45,7 +42,8 @@ class MaskProcessing(desc.AVCommandLineNode):
             ),
             name="inputs",
             label="Input Directories",
-            description="A set of directories containing masks with the same names.",
+            description="A set of directories containing masks with the same names.\n" 
+            "Any entry (except the first one) may be an image path. In this case, this mask will be used as an operand for each entry of the first directory.",
             exposed=True,
         ),
         desc.ChoiceParam(
@@ -80,6 +78,6 @@ class MaskProcessing(desc.AVCommandLineNode):
             description="Processed segmentation masks.",
             semantic="imageList",
             value= "{nodeCacheFolder}/*.exr",
-            group="",
+            commandLineGroup="",
         ),
     ]

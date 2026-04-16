@@ -5,8 +5,14 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include <aliceVision/image/all.hpp>
 
+#include <aliceVision/image/io.hpp>
+
+#include <aliceVision/image/Image.hpp>
+#include <aliceVision/image/colorspace.hpp>
+#include <aliceVision/image/dcp.hpp>
+#include <aliceVision/half.hpp>
+#include <aliceVision/stl/mapUtils.hpp>
 #include <aliceVision/system/Logger.hpp>
 #include <aliceVision/utils/filesIO.hpp>
 
@@ -16,9 +22,6 @@
 #include <OpenImageIO/color.h>
 #include <OpenImageIO/imagecache.h>
 
-#include <aliceVision/half.hpp>
-#include <aliceVision/stl/mapUtils.hpp>
-
 #include <boost/algorithm/string.hpp>
 
 #include <cstring>
@@ -26,6 +29,8 @@
 #include <stdexcept>
 #include <iostream>
 #include <cmath>
+#include <algorithm>
+#include <cctype>
 
 namespace aliceVision {
 namespace image {
@@ -200,22 +205,23 @@ std::vector<std::string> getSupportedExtensions()
 {
     std::vector<std::string> supportedExtensions;
 
-    // Map containing the parsed "extension_list" with each supported format and its associated extensions
-    static std::map<std::string, std::vector<std::string>> extensionList = oiio::get_extension_map();
-
-    for (auto& format : extensionList)
+    // oiio::get_extension_map() contains the parsed "extension_list" with each
+    // supported format and its associated extensions
+    for (const auto& [formatName, extensions] : oiio::get_extension_map())
     {
-        for (auto& extension : format.second)
+        for (const auto& extension : extensions)
         {
-            supportedExtensions.push_back(extension.insert(0, "."));
+            supportedExtensions.push_back("." + extension);
         }
     }
+
     return supportedExtensions;
 }
 
 bool isSupported(const std::string& extension)
 {
-    static const std::vector<std::string> supportedExtensions = getSupportedExtensions();
+    const std::vector<std::string> supportedExtensions = getSupportedExtensions();
+
     const auto start = supportedExtensions.begin();
     const auto end = supportedExtensions.end();
     return (std::find(start, end, boost::to_lower_copy(extension)) != end);
@@ -1057,6 +1063,16 @@ void writeImage(const std::string& path,
     oiio::ImageSpec imageSpec(image.width(), image.height(), nchannels, typeDesc);
     imageSpec.extra_attribs = metadata;  // add custom metadata
 
+    auto itversion = metadata.find("version");
+    if (isEXR && itversion != metadata.end())
+    {
+        // The "version" metadata of exr images must be an integer, otherwise the exr image could be misinterpreted.
+        if (itversion->type() != oiio::TypeDesc::INT)
+        {
+            imageSpec.attribute("version", itversion->get_int());
+        }
+    }
+
     imageSpec.attribute("jpeg:subsampling", "4:4:4");  // if possible, always subsampling 4:4:4 for jpeg
 
     std::string compressionMethod = "none";
@@ -1221,6 +1237,16 @@ void writeImageNoFloat(const std::string& path,
     oiio::ImageSpec imageSpec(image.width(), image.height(), 1, typeDesc);
     imageSpec.extra_attribs = metadata;  // add custom metadata
 
+    auto itversion = metadata.find("version");
+    if (isEXR && itversion != metadata.end())
+    {
+        // The "version" metadata of exr images must be an integer, otherwise the exr image could be misinterpreted.
+        if (itversion->type() != oiio::TypeDesc::INT)
+        {
+            imageSpec.attribute("version", itversion->get_int());
+        }
+    }
+
     imageSpec.attribute("jpeg:subsampling", "4:4:4");             // if possible, always subsampling 4:4:4 for jpeg
     imageSpec.attribute("compression", isEXR ? "zips" : "none");  // if possible, set compression (zips for EXR, none for the other)
 
@@ -1245,6 +1271,11 @@ void writeImageNoFloat(const std::string& path,
 void readImage(const std::string& path, Image<float>& image, const ImageReadOptions& imageReadOptions)
 {
     readImage(path, oiio::TypeDesc::FLOAT, 1, image, imageReadOptions);
+}
+
+void readImage(const std::string& path, Image<IndexT>& image, const ImageReadOptions& imageReadOptions)
+{
+    readImage(path, oiio::TypeDesc::UINT32, 1, image, imageReadOptions);
 }
 
 void readImage(const std::string& path, Image<unsigned char>& image, const ImageReadOptions& imageReadOptions)
@@ -1278,7 +1309,7 @@ void readImage(const std::string& path, Image<RGBColor>& image, const ImageReadO
 
 void logOIIOImageCacheInfo()
 {
-    oiio::ImageCache* cache = oiio::ImageCache::create(true);
+    std::shared_ptr<oiio::ImageCache> cache = oiio::ImageCache::create(true);
 
     int maxOpenFiles = -1;
     cache->getattribute("max_open_files", maxOpenFiles);
@@ -1421,7 +1452,67 @@ std::string getAliceVisionOCIOConfig()
     return {};
 }
 
-void setAliceVisionRootOverride(const std::string& value) { aliceVisionRootOverride = value; }
+void setAliceVisionRootOverride(const std::string& value) 
+{ 
+    aliceVisionRootOverride = value; 
+}
+
+bool listImages(std::vector<std::string> & images, const std::string & path)
+{
+    images.clear();
+
+    // Retrieve all image extensions supported by oiio
+    std::vector<std::string> oiioExtensions = getSupportedExtensions();
+
+    // Lambda to check if a path has a supported image extension
+    auto isSupportedImageExtension = [&oiioExtensions](const fs::path& filePath) -> bool 
+    {
+        std::string currentExtension = filePath.extension().string();
+        std::transform(currentExtension.begin(), currentExtension.end(), currentExtension.begin(), ::tolower);
+
+        for (const auto& oiioExtension : oiioExtensions)
+        {
+            if (oiioExtension == currentExtension)
+            {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    // Check if path is a file
+    fs::path paramPath(path);
+    if (fs::is_regular_file(paramPath))
+    {
+        if (isSupportedImageExtension(paramPath))
+        {
+            images.push_back(path);
+            return true;
+        }
+    }
+
+    // Check if path is a directory
+    if (!fs::is_directory(paramPath))
+    {
+        return false;
+    }
+
+    // Recursively find all files with a given extension
+    for (const auto& entry : fs::recursive_directory_iterator(path)) 
+    {
+        if (!entry.is_regular_file())
+        {
+            continue;
+        }
+
+        if (isSupportedImageExtension(entry.path()))
+        {
+            images.push_back(entry.path().string());
+        }
+    }
+
+    return true;
+}
 
 }  // namespace image
 }  // namespace aliceVision

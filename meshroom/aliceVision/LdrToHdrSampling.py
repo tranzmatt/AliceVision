@@ -4,7 +4,7 @@ import json
 
 from meshroom.core import desc
 from meshroom.core.utils import COLORSPACES, VERBOSE_LEVEL
-
+from pyalicevision import parallelization as avpar
 
 def findMetadata(d, keys, defaultValue):
     v = None
@@ -24,35 +24,15 @@ def findMetadata(d, keys, defaultValue):
     return defaultValue
 
 
-class DividedInputNodeSize(desc.DynamicNodeSize):
-    '''
-    The LDR2HDR will reduce the amount of views in the SfMData.
-    This class converts the number of LDR input views into the number of HDR output views.
-    '''
-    def __init__(self, param, divParam):
-        super(DividedInputNodeSize, self).__init__(param)
-        self._divParam = divParam
-
-    def computeSize(self, node):
-        s = super(DividedInputNodeSize, self).computeSize(node)
-        divParam = node.attribute(self._divParam)
-        if divParam.value == 0:
-            return s
-        # s is the total number of inputs and may include outliers, that will not be used
-        # during computations and should thus be excluded from the size computation
-        return (s - node.outliersNb) / divParam.value
-
 
 class LdrToHdrSampling(desc.AVCommandLineNode):
-    commandLine = 'aliceVision_LdrToHdrSampling {allParams}'
-    size = DividedInputNodeSize('input', 'nbBrackets')
+    commandLine = "aliceVision_LdrToHdrSampling {allParams}"
+    size = avpar.DynamicDividedViewsSize("input", "nbBrackets")
     parallelization = desc.Parallelization(blockSize=2)
-    commandLineRange = '--rangeStart {rangeStart} --rangeSize {rangeBlockSize}'
+    commandLineRange = "--rangeStart {rangeStart} --rangeSize {rangeBlockSize}"
 
-    category = 'Panorama HDR'
-    documentation = '''
-Sample pixels from Low range images for HDR creation.
-'''
+    category = "Panorama HDR"
+    documentation = """Sample pixels from Low range images for HDR creation."""
 
     outliersNb = 0  # Number of detected outliers among the input images
 
@@ -70,7 +50,7 @@ Sample pixels from Low range images for HDR creation.
             value=0,
             range=(0, 15, 1),
             invalidate=False,
-            group="user",  # not used directly on the command line
+            commandLineGroup="user",  # not used directly on the command line
             errorMessage="The set number of brackets is not a multiple of the number of input images.\n"
                          "Errors will occur during the computation.",
             exposed=True,
@@ -83,7 +63,7 @@ Sample pixels from Low range images for HDR creation.
                         "is 0, else it is equal to 'userNbBrackets'.",
             value=0,
             range=(0, 15, 1),
-            group="bracketsParams",
+            commandLineGroup="bracketsParams",
         ),
         desc.BoolParam(
             name="byPass",
@@ -204,7 +184,7 @@ Sample pixels from Low range images for HDR creation.
         node.outliersNb = 0  # Reset the number of detected outliers
         node.userNbBrackets.validValue = True  # Reset the status of "userNbBrackets"
 
-        cameraInitOutput = node.input.getLinkParam(recursive=True)
+        cameraInitOutput = node.input.inputRootLink
         if not cameraInitOutput:
             node.nbBrackets.value = 0
             return
@@ -222,7 +202,7 @@ Sample pixels from Low range images for HDR creation.
 
         if not cameraInitOutput.node.hasAttribute("viewpoints"):
             if cameraInitOutput.node.hasAttribute("input"):
-                cameraInitOutput = cameraInitOutput.node.input.getLinkParam(recursive=True)
+                cameraInitOutput = cameraInitOutput.node.input.inputRootLink
         if cameraInitOutput and cameraInitOutput.node and cameraInitOutput.node.hasAttribute("viewpoints"):
             viewpoints = cameraInitOutput.node.viewpoints.value
         else:

@@ -5,11 +5,11 @@ from meshroom.core.utils import VERBOSE_LEVEL
 
 
 class PanoramaInit(desc.AVCommandLineNode):
-    commandLine = 'aliceVision_panoramaInit {allParams}'
-    size = desc.DynamicNodeSize('input')
+    commandLine = "aliceVision_panoramaInit {allParams}"
+    size = desc.DynamicNodeSize("input")
 
-    category = 'Panorama HDR'
-    documentation = '''
+    category = "Panorama HDR"
+    documentation = """
 This node allows to setup the Panorama:
 
 1/ Enables the initialization the cameras from known position in an XML file (provided by
@@ -18,8 +18,7 @@ This node allows to setup the Panorama:
 2/ Enables to setup Full Fisheye Optics (to use an Equirectangular camera model).
 
 3/ To automatically detects the Fisheye Circle (radius + center) in input images or manually adjust it.
-
-'''
+"""
 
     inputs = [
         desc.File(
@@ -90,7 +89,7 @@ This node allows to setup the Panorama:
             name="fisheyeCenterOffset",
             label="Fisheye Center",
             description="Center of the fisheye circle (XY offset to the center in pixels).",
-            groupDesc=[
+            items=[
                 desc.FloatParam(
                     name="fisheyeCenterOffset_x",
                     label="x",
@@ -106,7 +105,7 @@ This node allows to setup the Panorama:
                     range=(-1000.0, 10000.0, 1.0),
                 ),
             ],
-            group=None,  # skip group from command line
+            commandLineGroup=None,  # skip group from command line
             enabled=lambda node: node.useFisheye.value and not node.estimateFisheyeCircle.value,
         ),
         desc.FloatParam(
@@ -144,11 +143,11 @@ This node allows to setup the Panorama:
     outputs = [
         desc.File(
             name="contactSheet",
-            label="Contact sheet",
+            label="Contact Sheet",
             semantic="image",
             description="Contact sheet path.",
             value="{nodeCacheFolder}/contactSheetImage.jpg",
-            group="",  # do not export on the command line
+            commandLineGroup="",  # do not export on the command line
             enabled=lambda node: node.buildContactSheet.enabled
         ),
         desc.File(

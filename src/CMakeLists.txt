@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.30)
 message("CMake version: ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}")
 
 # ==============================================================================
@@ -63,7 +63,6 @@ trilean_option(ALICEVISION_USE_OPENMP "Enable OpenMP parallelization" ON)
 trilean_option(ALICEVISION_USE_CCTAG "Enable CCTAG markers" AUTO)
 trilean_option(ALICEVISION_USE_APRILTAG "Enable AprilTag markers" AUTO)
 trilean_option(ALICEVISION_USE_POPSIFT "Enable GPU SIFT implementation" AUTO)
-trilean_option(ALICEVISION_USE_OPENGV "Enable use of OpenGV algorithms" AUTO)
 trilean_option(ALICEVISION_USE_ALEMBIC "Enable Alembic I/O" AUTO)
 trilean_option(ALICEVISION_USE_UNCERTAINTYTE "Enable Uncertainty computation" AUTO)
 trilean_option(ALICEVISION_USE_ONNX "Enable ONNX Runtime" AUTO)
@@ -71,6 +70,7 @@ option(ALICEVISION_USE_ONNX_GPU "Use CUDA with ONNX Runtime" ON)
 trilean_option(ALICEVISION_USE_CUDA "Enable CUDA" ON)
 trilean_option(ALICEVISION_USE_OPENCV "Enable use of OpenCV algorithms" OFF)
 trilean_option(ALICEVISION_USE_OPENCV_CONTRIB "Enable use of OpenCV algorithms from extra modules" AUTO)
+trilean_option(ALICEVISION_USE_USD "Enable USD" AUTO)
 option(ALICEVISION_USE_OCVSIFT "Add or not OpenCV SIFT in available features" OFF)
 mark_as_advanced(FORCE ALICEVISION_USE_OCVSIFT)
 
@@ -137,8 +137,16 @@ if (WIN32)
     add_definitions(-DNOMINMAX)
     add_definitions(-D_USE_MATH_DEFINES)
     if (MSVC)
-        add_compile_options(/bigobj)
-        add_compile_options(/MP)
+        # MSVC library version
+        cmake_policy(SET CMP0091 NEW)   # Manually choose msvcrt version
+        if(BUILD_SHARED_LIBS)
+            set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+        else()
+            set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+        endif()
+        add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/bigobj>)
+        add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/MP>)
+        add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/GR>)   # See policy CMP0117: Enable RTTI on MSVC
     endif()
 endif()
 
@@ -246,6 +254,9 @@ endif()
 if (ALICEVISION_USE_OPENMP STREQUAL "OFF")
     set(ALICEVISION_HAVE_OPENMP 0)
 else() # ON OR AUTO
+    if (MSVC)
+        set(OpenMP_RUNTIME_MSVC "llvm")
+    endif()
     find_package(OpenMP)
 
     if (OPENMP_FOUND)
@@ -333,7 +344,7 @@ endif()
 # ==============================================================================
 # OpenImageIO
 # ==============================================================================
-find_package(OpenImageIO 2.0.9 REQUIRED)
+find_package(OpenImageIO 3.0 REQUIRED)
 if (OPENIMAGEIO_FOUND OR OpenImageIO_FOUND)
     message(STATUS "OpenImageIO found.")
 else()
@@ -593,26 +604,6 @@ if (NOT ALICEVISION_USE_USD STREQUAL "OFF")
 endif()
 
 # ==============================================================================
-# OpenGV
-# ==============================================================================
-# - optional, it allows to use the generic camera PnP algorithms for rig localization
-# ==============================================================================
-set(ALICEVISION_HAVE_OPENGV 0)
-
-if (ALICEVISION_BUILD_SFM)
-    if (NOT ALICEVISION_USE_OPENGV STREQUAL "OFF")
-        find_package(opengv 1.0 CONFIG)
-        if (opengv_FOUND)
-            set(ALICEVISION_HAVE_OPENGV 1)
-            message(STATUS "OpenGV ${opengv_VERSION} found.")
-        elseif (ALICEVISION_USE_OPENGV STREQUAL "ON")
-            message(SEND_ERROR "Failed to find OpenGV.")
-        endif()
-    endif()
-
-endif()
-
-# ==============================================================================
 # UncertaintyTE
 # ==============================================================================
 # - optional, only external and enabled only if ALICEVISION_USE_UNCERTAINTYTE is ON
@@ -675,93 +666,85 @@ option(ALICEVISION_USE_NVTX_PROFILING "Use CUDA NVTX for profiling." OFF)
 option(ALICEVISION_NVCC_WARNINGS      "Switch on several additional warnings for CUDA nvcc." OFF)
 
 set(ALICEVISION_HAVE_CUDA 0)
+set(ALICEVISION_CUDA_LIBRARIES "")
+set(ALICEVISION_NVTX_LIBRARY "")
 
 if (NOT ALICEVISION_USE_CUDA STREQUAL "OFF")
 
-    if (BUILD_SHARED_LIBS)
-        message(STATUS "BUILD_SHARED_LIBS ON")
-        # Need to declare CUDA_USE_STATIC_CUDA_RUNTIME as an option to ensure that it is not overwritten in FindCUDA.
-        option(CUDA_USE_STATIC_CUDA_RUNTIME "Use the static version of the CUDA runtime library if available" OFF)
-        set(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
+    include(CheckLanguage)
+    check_language(CUDA)
+
+    if (NOT CMAKE_CUDA_COMPILER)
+        if (ALICEVISION_USE_CUDA STREQUAL "ON")
+            message(SEND_ERROR "Failed to find a CUDA compiler.")
+        endif()
     else()
-        message(STATUS "BUILD_SHARED_LIBS OFF")
-        option(CUDA_USE_STATIC_CUDA_RUNTIME "Use the static version of the CUDA runtime library if available" ON)
-        set(CUDA_USE_STATIC_CUDA_RUNTIME ON)
-    endif()
+        if (BUILD_SHARED_LIBS)
+            message(STATUS "BUILD_SHARED_LIBS ON")
+            set(CMAKE_CUDA_RUNTIME_LIBRARY Shared)
+        else()
+            message(STATUS "BUILD_SHARED_LIBS OFF")
+            set(CMAKE_CUDA_RUNTIME_LIBRARY Static)
+        endif()
 
-    find_package(CUDA 11.0)
+        enable_language(CUDA)
+        find_package(CUDAToolkit 11.0 QUIET)
 
-    if (CUDA_FOUND)
-        set(ALICEVISION_HAVE_CUDA 1)
-        message(STATUS "CUDA found.")
-    elseif (ALICEVISION_USE_CUDA STREQUAL "ON")
-        message(SEND_ERROR "Failed to find CUDA (>= 11.0).")
+        if (CUDAToolkit_FOUND)
+            set(ALICEVISION_HAVE_CUDA 1)
+            list(APPEND ALICEVISION_CUDA_LIBRARIES CUDA::cudart)
+            if (TARGET CUDA::cudadevrt)
+                list(APPEND ALICEVISION_CUDA_LIBRARIES CUDA::cudadevrt)
+            endif()
+            message(STATUS "CUDA found: ${CUDAToolkit_VERSION}")
+        elseif (ALICEVISION_USE_CUDA STREQUAL "ON")
+            message(SEND_ERROR "Failed to find CUDA Toolkit (>= 11.0).")
+        endif()
     endif()
 endif()
 
 if (ALICEVISION_HAVE_CUDA)
-    set(CUDA_SEPARABLE_COMPILATION ON)
-    message("Build Mode: ${CMAKE_BUILD_TYPE}")
 
-    set(CUDA_NVCC_FLAGS_DEBUG   "${CUDA_NVCC_FLAGS_DEBUG};-G;-g")
-    # set(CUDA_NVCC_FLAGS_RELEASE "${CUDA_NVCC_FLAGS_RELEASE};-O3")
-    if (CUDA_VERSION_MAJOR VERSION_GREATER_EQUAL 12)
-        set(ALICEVISION_CUDA_CC_LIST_BASIC 50 52 60 61 62 70 72 75 80 86 87 89 90)
-    elseif (CUDA_VERSION VERSION_GREATER_EQUAL 11.8)
-        set(ALICEVISION_CUDA_CC_LIST_BASIC 35 50 52 60 61 62 70 72 75 80 86 87 89 90)
-    elseif (CUDA_VERSION VERSION_GREATER_EQUAL 11.5)
-        set(ALICEVISION_CUDA_CC_LIST_BASIC 35 50 52 60 61 62 70 72 75 80 86 87)
-    elseif (CUDA_VERSION VERSION_GREATER_EQUAL 11.1)
-        set(ALICEVISION_CUDA_CC_LIST_BASIC 35 50 52 60 61 62 70 72 75 80 86)
-    elseif (CUDA_VERSION_MAJOR GREATER_EQUAL 11)
-        set(ALICEVISION_CUDA_CC_LIST_BASIC 35 50 52 60 61 62 70 72 75 80)
-    else()
-        message(SEND_ERROR "Requires CUDA >= 11.0.")
-    endif()
-    set(ALICEVISION_CUDA_CC_LIST ${ALICEVISION_CUDA_CC_LIST_BASIC}
-        CACHE STRING "CUDA CC versions to compile")
-
-    # Add all requested CUDA CCs to the command line for offline compilation
-    list(SORT ALICEVISION_CUDA_CC_LIST)
-    foreach (ALICEVISION_CC_VERSION ${ALICEVISION_CUDA_CC_LIST})
-        set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-gencode;arch=compute_${ALICEVISION_CC_VERSION},code=sm_${ALICEVISION_CC_VERSION}")
-    endforeach()
-
-    # Use the highest request CUDA CC for CUDA JIT compilation
-    list(LENGTH ALICEVISION_CUDA_CC_LIST ALICEVISION_CC_LIST_LEN)
-    MATH(EXPR ALICEVISION_CC_LIST_LEN "${ALICEVISION_CC_LIST_LEN}-1")
-    list(GET ALICEVISION_CUDA_CC_LIST ${ALICEVISION_CC_LIST_LEN} ALICEVISION_CUDA_CC_LIST_LAST)
-    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-gencode;arch=compute_${ALICEVISION_CUDA_CC_LIST_LAST},code=compute_${ALICEVISION_CUDA_CC_LIST_LAST}")
-
-    set(CUDA_NVCC_FLAGS         "${CUDA_NVCC_FLAGS};-std=c++20")
+    set(CMAKE_CUDA_ARCHITECTURES
+        "all-major"
+        CACHE STRING "CUDA architectures used to build AliceVision" FORCE
+    )
 
     # default stream legacy implies that the 0 stream synchronizes all streams
-    set(CUDA_NVCC_FLAGS         "${CUDA_NVCC_FLAGS};--default-stream;legacy")
+    add_compile_options($<$<COMPILE_LANGUAGE:CUDA>:--default-stream=legacy>)
     # default stream per-thread implies that each host thread has one non-synchronizing 0-stream
-    # set(CUDA_NVCC_FLAGS         "${CUDA_NVCC_FLAGS};--default-stream;per-thread")
+    # add_compile_options($<$<COMPILE_LANGUAGE:CUDA>:--default-stream=per-thread>)
     # print local memory usage per kernel: -Xptxas;-v
     #   -Xptxas;--warn-on-local-memory-usage;-Xptxas;--warn-on-spills
-    message(STATUS "CUDA Version is ${CUDA_VERSION}")
+    message(STATUS "CUDA Version is ${CUDAToolkit_VERSION}")
+    add_compile_options(
+        $<$<AND:$<COMPILE_LANGUAGE:CUDA>,$<CONFIG:Debug>>:-G>
+        $<$<AND:$<COMPILE_LANGUAGE:CUDA>,$<CONFIG:Debug>>:-g>
+    )
     if (UNIX)
-        set(CUDA_NVCC_FLAGS         "${CUDA_NVCC_FLAGS};-D_FORCE_INLINES")
+        add_compile_options($<$<COMPILE_LANGUAGE:CUDA>:-D_FORCE_INLINES>)
     endif()
     if (ALICEVISION_NVCC_WARNINGS)
-        set(CUDA_NVCC_FLAGS_RELEASE "${CUDA_NVCC_FLAGS_RELEASE};-Xptxas;-warn-lmem-usage")
-        set(CUDA_NVCC_FLAGS_RELEASE "${CUDA_NVCC_FLAGS_RELEASE};-Xptxas;-warn-spills")
-        set(CUDA_NVCC_FLAGS_RELEASE "${CUDA_NVCC_FLAGS_RELEASE};-Xptxas;--warn-on-local-memory-usage")
-        set(CUDA_NVCC_FLAGS_RELEASE "${CUDA_NVCC_FLAGS_RELEASE};-Xptxas;--warn-on-spills")
+        add_compile_options(
+            $<$<AND:$<COMPILE_LANGUAGE:CUDA>,$<CONFIG:Release>>:-Xptxas=-warn-lmem-usage>
+            $<$<AND:$<COMPILE_LANGUAGE:CUDA>,$<CONFIG:Release>>:-Xptxas=-warn-spills>
+            $<$<AND:$<COMPILE_LANGUAGE:CUDA>,$<CONFIG:Release>>:-Xptxas=--warn-on-local-memory-usage>
+            $<$<AND:$<COMPILE_LANGUAGE:CUDA>,$<CONFIG:Release>>:-Xptxas=--warn-on-spills>
+        )
     endif()
-
-    # library required for CUDA dynamic parallelism, forgotten by CMake 3.4
-    cuda_find_library_local_first(CUDA_CUDADEVRT_LIBRARY cudadevrt "\"cudadevrt\" library")
 
     # If user activates NVTX profiling, add library and flags
     if (ALICEVISION_USE_NVTX_PROFILING)
         message(STATUS "PROFILING CPU/GPU CODE: NVTX is in use")
-        cuda_find_library_local_first(CUDA_NVTX_LIBRARY nvToolsExt "NVTX library")
-        add_definitions(-DALICEVISION_USE_NVTX)
-        include_directories(${CUDA_INCLUDE_DIRS})
-        set(ALICEVISION_NVTX_LIBRARY ${CUDA_NVTX_LIBRARY})
+        if (TARGET CUDA::nvToolsExt)
+            add_definitions(-DALICEVISION_USE_NVTX)
+            set(ALICEVISION_NVTX_LIBRARY CUDA::nvToolsExt)
+        elseif (TARGET CUDA::nvtx3)
+            add_definitions(-DALICEVISION_USE_NVTX)
+            set(ALICEVISION_NVTX_LIBRARY CUDA::nvtx3)
+        else()
+            message(WARNING "NVTX profiling requested but no NVTX CMake target was found in CUDAToolkit.")
+        endif()
     endif()
 endif()
 
@@ -775,6 +758,7 @@ if (ALICEVISION_BUILD_SWIG_BINDING)
         cmake_policy(SET CMP0078 NEW)  # Use the specified module name for the target's name
         cmake_policy(SET CMP0086 NEW)  # Use "-module {name}" when the module name has been set with SWIG_MODULE_NAME
     
+        set(ALICEVISION_PYTHON_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/python/pyalicevision")
         include(UseSWIG)
         message(STATUS "SWIG found.")
     else()
@@ -981,7 +965,6 @@ message("** Use OpenCV SIFT features: " ${ALICEVISION_HAVE_OCVSIFT})
 message("** Use PopSift feature extractor: " ${ALICEVISION_HAVE_POPSIFT})
 message("** Use CCTAG markers: " ${ALICEVISION_HAVE_CCTAG})
 message("** Use AprilTag markers: " ${ALICEVISION_HAVE_APRILTAG})
-message("** Use OpenGV for rig localization: " ${ALICEVISION_HAVE_OPENGV})
 message("** Use ONNX: " ${ALICEVISION_HAVE_ONNX})
 message("** Use ONNX with CUDA: " ${ALICEVISION_HAVE_ONNX_GPU})
 message("\n")
@@ -1004,6 +987,7 @@ endif()
 if (ALICEVISION_BUILD_SWIG_BINDING)
     message("\n")
     message(STATUS "SWIG: " ${SWIG_VERSION} "")
+    message(STATUS "Python: " ${Python3_VERSION} "")
 endif()
 
 message("\n")
@@ -1089,5 +1073,9 @@ configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in" ${cmakeUninstallFile}
     IMMEDIATE @ONLY
 )
+
+if (ALICEVISION_BUILD_SWIG_BINDING)
+    install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/aliceVision/python/" DESTINATION "${ALICEVISION_PYTHON_INSTALL_DIR}")
+endif()
 
 add_custom_target(uninstall "${CMAKE_COMMAND}" -P "${cmakeUninstallFile}")

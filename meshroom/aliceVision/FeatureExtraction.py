@@ -2,16 +2,16 @@ __version__ = "1.3"
 
 from meshroom.core import desc
 from meshroom.core.utils import COLORSPACES, DESCRIBER_TYPES, VERBOSE_LEVEL
-
+from pyalicevision import parallelization as avpar
 
 class FeatureExtraction(desc.AVCommandLineNode):
-    commandLine = 'aliceVision_featureExtraction {allParams}'
-    size = desc.DynamicNodeSize('input')
+    commandLine = "aliceVision_featureExtraction {allParams}"
+    size = avpar.DynamicViewsSize("input")
     parallelization = desc.Parallelization(blockSize=40)
-    commandLineRange = '--rangeStart {rangeStart} --rangeSize {rangeBlockSize}'
+    commandLineRange = "--rangeStart {rangeStart} --rangeSize {rangeBlockSize}"
 
-    category = 'Sparse Reconstruction'
-    documentation = '''
+    category = "Sparse Reconstruction"
+    documentation = """
 This node extracts distinctive groups of pixels that are, to some extent, invariant to changing camera viewpoints during image acquisition.
 Hence, a feature in the scene should have similar feature descriptions in all images.
 
@@ -29,7 +29,7 @@ It is robust to motion-blur, depth-of-field, occlusion. Be careful to have enoug
 
 ## Online
 [https://alicevision.org/#photogrammetry/natural_feature_extraction](https://alicevision.org/#photogrammetry/natural_feature_extraction)
-'''
+"""
 
     inputs = [
         desc.File(
@@ -74,7 +74,7 @@ It is robust to motion-blur, depth-of-field, occlusion. Be careful to have enoug
                         "Warning: Use ULTRA only on small datasets.",
             value="normal",
             values=["low", "medium", "normal", "high", "ultra", "custom"],
-            group=lambda node: 'allParams' if node.describerPreset.value != 'custom' else None,
+            commandLineGroup=lambda node: 'allParams' if node.describerPreset.value != 'custom' else None,
         ),
         desc.IntParam(
             name="maxNbFeatures",

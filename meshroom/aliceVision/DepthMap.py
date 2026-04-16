@@ -1,13 +1,13 @@
-__version__ = "5.0"
+__version__ = "5.1"
 
 from meshroom.core import desc
 from meshroom.core.utils import VERBOSE_LEVEL
-
+from pyalicevision import parallelization as avpar
 
 class DepthMap(desc.AVCommandLineNode):
     commandLine = "aliceVision_depthMapEstimation {allParams}"
     gpu = desc.Level.INTENSIVE
-    size = desc.DynamicNodeSize("input")
+    size = avpar.DynamicReconstructedViewsSize("input")
     parallelization = desc.Parallelization(blockSize=12)
     commandLineRange = "--rangeStart {rangeStart} --rangeSize {rangeBlockSize}"
 
@@ -71,8 +71,8 @@ Use a downscale factor of one (full-resolution) only if the quality of the input
             name="tiling",
             label="Tiling",
             description="Tiles are used to split the computation into fixed buffers to fit the GPU best.",
-            group=None,
-            groupDesc=[
+            commandLineGroup=None,
+            items=[
                 desc.IntParam(
                     name="tileBufferWidth",
                     label="Buffer Width",
@@ -125,8 +125,8 @@ Use a downscale factor of one (full-resolution) only if the quality of the input
                         "low-resolution depth map.\n"
                         "This method is highly robust but has limited depth precision (banding artifacts due to a "
                         "limited list of depth planes).",
-            group=None,
-            groupDesc=[
+            commandLineGroup=None,
+            items=[
                 desc.IntParam(
                     name="sgmScale",
                     label="Downscale Factor",
@@ -240,13 +240,6 @@ Use a downscale factor of one (full-resolution) only if the quality of the input
                     range=(1, 5000, 1),
                     advanced=True,
                 ),
-                desc.StringParam(
-                    name="sgmFilteringAxes",
-                    label="Filtering Axes",
-                    description="Define axes for the filtering of the similarity volume.",
-                    value="YX",
-                    advanced=True,
-                ),
                 desc.BoolParam(
                     name="sgmDepthListPerTile",
                     label="Depth List Per Tile",
@@ -268,8 +261,8 @@ Use a downscale factor of one (full-resolution) only if the quality of the input
             description="The refine step computes a similarity volume in higher resolution but with a small depth "
                         "range around the SGM depth map.\n"
                         "This allows to compute a depth map with sub-pixel accuracy.",
-            group=None,
-            groupDesc=[
+            commandLineGroup=None,
+            items=[
                 desc.BoolParam(
                     name="refineEnabled",
                     label="Enable",
@@ -379,8 +372,8 @@ Use a downscale factor of one (full-resolution) only if the quality of the input
             name="colorOptimization",
             label="Color Optimization",
             description="Color optimization post-process parameters.",
-            group=None,
-            groupDesc=[
+            commandLineGroup=None,
+            items=[
                 desc.BoolParam(
                     name="colorOptimizationEnabled",
                     label="Enable",
@@ -403,8 +396,8 @@ Use a downscale factor of one (full-resolution) only if the quality of the input
             label="Custom Patch Pattern",
             description="User custom patch pattern for similarity comparison.",
             advanced=True,
-            group=None,
-            groupDesc=[
+            commandLineGroup=None,
+            items=[
                 desc.BoolParam(
                     name="sgmUseCustomPatchPattern",
                     label="Enable For SGM",
@@ -431,8 +424,8 @@ Use a downscale factor of one (full-resolution) only if the quality of the input
                         label="Patch Pattern Subpart",
                         description="Custom patch pattern subpart configuration for similarity volume computation.",
                         joinChar=":",
-                        group=None,
-                        groupDesc=[
+                        commandLineGroup=None,
+                        items=[
                             desc.ChoiceParam(
                                 name="customPatchPatternSubpartType",
                                 label="Type",
@@ -488,8 +481,8 @@ Use a downscale factor of one (full-resolution) only if the quality of the input
             description="Intermediate results parameters for debug purposes.\n"
                         "Warning: Dramatically affect performances and use large amount of storage.",
             advanced=True,
-            group=None,
-            groupDesc=[
+            commandLineGroup=None,
+            items=[
                 desc.BoolParam(
                     name="exportIntermediateDepthSimMaps",
                     label="Export Depth Maps",
@@ -576,7 +569,7 @@ Use a downscale factor of one (full-resolution) only if the quality of the input
             description="Generated depth maps.",
             semantic="image",
             value="{nodeCacheFolder}/<VIEW_ID>_depthMap.exr",
-            group="",  # do not export on the command line
+            commandLineGroup="",  # do not export on the command line
         ),
         desc.File(
             name="sim",
@@ -584,14 +577,14 @@ Use a downscale factor of one (full-resolution) only if the quality of the input
             description="Generated sim maps.",
             semantic="image",
             value="{nodeCacheFolder}/<VIEW_ID>_simMap.exr",
-            group="",  # do not export on the command line
+            commandLineGroup="",  # do not export on the command line
         ),
         desc.File(
             name="tilePattern",
             label="Tile Pattern",
             description="Debug: Tile pattern.",
             value="{nodeCacheFolder}/<VIEW_ID>_tilePattern.obj",
-            group="",  # do not export on the command line
+            commandLineGroup="",  # do not export on the command line
             enabled=lambda node: node.intermediateResults.exportTilePattern.value,
         ),
         desc.File(
@@ -600,7 +593,7 @@ Use a downscale factor of one (full-resolution) only if the quality of the input
             description="Debug: Depth maps SGM",
             semantic="image",
             value="{nodeCacheFolder}/<VIEW_ID>_depthMap_sgm.exr",
-            group="",  # do not export on the command line
+            commandLineGroup="",  # do not export on the command line
             enabled=lambda node: node.intermediateResults.exportIntermediateDepthSimMaps.value,
         ),
         desc.File(
@@ -609,7 +602,7 @@ Use a downscale factor of one (full-resolution) only if the quality of the input
             description="Debug: Depth maps SGM upscaled.",
             semantic="image",
             value="{nodeCacheFolder}/<VIEW_ID>_depthMap_sgmUpscaled.exr",
-            group="",  # do not export on the command line
+            commandLineGroup="",  # do not export on the command line
             enabled=lambda node: node.intermediateResults.exportIntermediateDepthSimMaps.value,
         ),
         desc.File(
@@ -618,7 +611,7 @@ Use a downscale factor of one (full-resolution) only if the quality of the input
             description="Debug: Depth maps after refinement",
             semantic="image",
             value="{nodeCacheFolder}/<VIEW_ID>_depthMap_refinedFused.exr",
-            group="",  # do not export on the command line
+            commandLineGroup="",  # do not export on the command line
             enabled=lambda node: node.intermediateResults.exportIntermediateDepthSimMaps.value,
         ),
     ]

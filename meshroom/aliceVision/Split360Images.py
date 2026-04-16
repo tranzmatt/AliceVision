@@ -5,12 +5,12 @@ from meshroom.core.utils import VERBOSE_LEVEL
 
 
 class Split360InputNodeSize(desc.DynamicNodeSize):
-    '''
+    """
     The Split360Images will increase the amount of views in the SfMData.
     This class converts the number of input views into the number of split output views.
-    '''
-    def computeSize(self, node):
-        s = super(Split360InputNodeSize, self).computeSize(node)
+    """
+    def __call__(self, node):
+        s = super(Split360InputNodeSize, self).__call__(node)
         factor = 0
         mode = node.attribute('splitMode')
         if mode.value == 'equirectangular':
@@ -21,11 +21,11 @@ class Split360InputNodeSize(desc.DynamicNodeSize):
 
 
 class Split360Images(desc.AVCommandLineNode):
-    commandLine = 'aliceVision_split360Images {allParams}'
-    size = Split360InputNodeSize('input')
+    commandLine = "aliceVision_split360Images {allParams}"
+    size = Split360InputNodeSize("input")
     
-    category = 'Utils'
-    documentation = "This node is used to extract multiple images from equirectangular or dualfisheye images."
+    category = "Utils"
+    documentation = """This node is used to extract multiple images from equirectangular or dualfisheye images."""
 
     inputs = [
         desc.File(
@@ -45,9 +45,9 @@ class Split360Images(desc.AVCommandLineNode):
             name="dualFisheyeGroup",
             label="Dual Fisheye",
             description="Dual Fisheye.",
-            group=None,
+            commandLineGroup=None,
             enabled=lambda node: node.splitMode.value == "dualfisheye",
-            groupDesc=[
+            items=[
                 desc.ChoiceParam(
                     name="dualFisheyeOffsetPresetX",
                     label="X Offset Preset",
@@ -75,9 +75,9 @@ class Split360Images(desc.AVCommandLineNode):
             name="equirectangularGroup",
             label="Equirectangular",
             description="Equirectangular",
-            group=None,
+            commandLineGroup=None,
             enabled=lambda node: node.splitMode.value == "equirectangular",
-            groupDesc=[
+            items=[
                 desc.IntParam(
                     name="equirectangularNbSplits",
                     label="Nb Splits",

@@ -8,9 +8,11 @@
 #include <boost/program_options.hpp>
 #include <aliceVision/cmdline/cmdline.hpp>
 #include <aliceVision/system/main.hpp>
+#include <aliceVision/alicevision_omp.hpp>
 
 // Image related
-#include <aliceVision/image/all.hpp>
+#include <aliceVision/image/Image.hpp>
+#include <aliceVision/image/io.hpp>
 
 // Sfmdata
 #include <aliceVision/sfmData/SfMData.hpp>

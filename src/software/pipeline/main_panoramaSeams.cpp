@@ -5,6 +5,7 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <aliceVision/panorama/seams.hpp>
+#include <aliceVision/alicevision_omp.hpp>
 
 // Input and geometry
 #include <aliceVision/sfmData/SfMData.hpp>
@@ -12,8 +13,9 @@
 #include <aliceVision/sfmDataIO/sfmDataIO.hpp>
 
 // Image
-#include <aliceVision/image/all.hpp>
+#include <aliceVision/image/Image.hpp>
 #include <aliceVision/image/imageAlgo.hpp>
+#include <aliceVision/image/io.hpp>
 
 // System
 #include <aliceVision/system/Logger.hpp>

@@ -5,14 +5,14 @@ from meshroom.core.utils import VERBOSE_LEVEL
 
 
 class ExportAnimatedCamera(desc.AVCommandLineNode):
-    commandLine = 'aliceVision_exportAnimatedCamera {allParams}'
-    size = desc.DynamicNodeSize('input')
+    commandLine = "aliceVision_exportAnimatedCamera {allParams}"
+    size = desc.DynamicNodeSize("input")
 
-    category = 'Export'
-    documentation = '''
+    category = "Export"
+    documentation = """
 Convert cameras from an SfM scene into an animated cameras in Alembic file format.
 Based on the input image filenames, it will recognize the input video sequence to create an animated camera.
-'''
+"""
 
     inputs = [
         desc.File(
@@ -69,6 +69,13 @@ Based on the input image filenames, it will recognize the input video sequence t
             description="Correct principal point.",
             value=False,
         ),
+        desc.FloatParam(
+            name="frameRate",
+            label="Camera Frame Rate",
+            description="Define the camera's Frames per seconds.",
+            value=24.0,
+            range=(1.0, 60.0, 1.0),
+        ),
         desc.ChoiceParam(
             name="verboseLevel",
             label="Verbose Level",
@@ -90,14 +97,14 @@ Based on the input image filenames, it will recognize the input video sequence t
             label="Camera",
             description="Output filename for the animated camera in Alembic format.",
             value="{nodeCacheFolder}/camera.abc",
-            group="",  # exclude from command line
+            commandLineGroup="",  # exclude from command line
         ),
         desc.File(
             name="outputUndistorted",
             label="Undistorted Folder",
             description="Output undistorted folder.",
             value="{nodeCacheFolder}/undistort/",
-            group="",  # exclude from command line
+            commandLineGroup="",  # exclude from command line
         ),
         desc.File(
             name="outputImages",
@@ -105,7 +112,7 @@ Based on the input image filenames, it will recognize the input video sequence t
             description="Output undistorted images.",
             value="{nodeCacheFolder}/undistort/<INTRINSIC_ID>_<FILESTEM>.{undistortedImageTypeValue}",
             semantic="image",
-            group="",  # exclude from command line
+            commandLineGroup="",  # exclude from command line
             enabled=lambda node: node.exportUndistortedImages.value,
         ),
     ]

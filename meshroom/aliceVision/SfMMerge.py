@@ -13,26 +13,24 @@ class MergeNodeSize(desc.DynamicNodeSize):
     def __init__(self, param):
         self._params = param
 
-    def computeSize(self, node):
-        
+    def __call__(self, node):
+
         size = 0
 
         for input in node.attribute(self._params).value:
-            paramName = input.getFullName()
+            paramName = input.fullName
             param = node.attribute(paramName)
-            size = size + param.getLinkParam().node.size
-        
+            size = size + param.inputLink.node.size
+
         return size
 
 
 class SfMMerge(desc.AVCommandLineNode):
-    commandLine = 'aliceVision_sfmMerge {allParams}'
+    commandLine = "aliceVision_sfmMerge {allParams}"
     size = MergeNodeSize("inputs")
 
-    category = 'Utils'
-    documentation = '''
-Merges two SfMData files into a single one. Fails if some UID is shared among them.
-'''
+    category = "Utils"
+    documentation = """Merges two SfMData files into a single one. Fails if some UID is shared among them."""
 
     inputs = [
         desc.ListAttribute(
@@ -55,6 +53,13 @@ Merges two SfMData files into a single one. Fails if some UID is shared among th
                         " - from_landmarks: Align from matched features, try to fuse.\n",
             value="simple_copy",
             values=["simple_copy", 'from_landmarks'],
+        ),
+        desc.BoolParam(
+            name="ignoreDuplicates",
+            label="Ignore duplicates",
+            description="If disabled, an error will be thrown if a duplicate view or intrinsic is found.",
+            enabled=lambda node: node.method.value == "simple_copy",
+            value=False,
         ),
         desc.ListAttribute(
             elementDesc=desc.File(
@@ -82,7 +87,7 @@ Merges two SfMData files into a single one. Fails if some UID is shared among th
             description="Output SfM file format.",
             value="abc",
             values=["abc", "sfm", "json"],
-            group="",  # exclude from command line
+            commandLineGroup="",  # exclude from command line
         ),
         desc.ChoiceParam(
             name="verboseLevel",

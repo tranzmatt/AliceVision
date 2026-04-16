@@ -5,6 +5,7 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <aliceVision/sfmData/SfMData.hpp>
+#include <aliceVision/alicevision_omp.hpp>
 #include <aliceVision/sfmDataIO/sfmDataIO.hpp>
 #include <aliceVision/sfm/sfm.hpp>
 #include <aliceVision/sfm/pipeline/regionsIO.hpp>
@@ -130,7 +131,8 @@ int aliceVision_main(int argc, char** argv)
     tracksBuilder.build(pairwiseMatches);
 
     ALICEVISION_LOG_INFO("Track filtering");
-    tracksBuilder.filter(filterTrackForks, minInputTrackLength);
+    size_t countFiltered = 0;
+    tracksBuilder.filter(countFiltered, filterTrackForks, minInputTrackLength);
 
     ALICEVISION_LOG_INFO("Track export to structure");
     track::TracksMap mapTracks;
@@ -144,6 +146,15 @@ int aliceVision_main(int argc, char** argv)
     std::ofstream of(tracksFilename);
     of << boost::json::serialize(jv);
     of.close();
+
+    ///////// Statistics
+
+    ALICEVISION_LOG_INFO("Number of pairs processed : " << pairwiseMatches.size());
+    matching::displayStats(pairwiseMatches);
+
+    ALICEVISION_LOG_INFO("Number of tracks : " << mapTracks.size());
+    tracksBuilder.displayStats(mapTracks);
+
 
     return EXIT_SUCCESS;
 }

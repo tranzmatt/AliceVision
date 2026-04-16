@@ -5,13 +5,13 @@ from meshroom.core.utils import VERBOSE_LEVEL
 
 
 class Meshing(desc.AVCommandLineNode):
-    commandLine = 'aliceVision_meshing {allParams}'
+    commandLine = "aliceVision_meshing {allParams}"
 
     cpu = desc.Level.INTENSIVE
     ram = desc.Level.INTENSIVE
 
-    category = 'Dense Reconstruction'
-    documentation = '''
+    category = "Dense Reconstruction"
+    documentation = """
 This node creates a dense geometric surface representation of the scene.
 
 First, it fuses all the depth maps into a global dense point cloud with an adaptive resolution.
@@ -20,7 +20,7 @@ A Graph Cut Max-Flow is applied to optimally cut the volume. This cut represents
 
 ## Online
 [https://alicevision.org/#photogrammetry/meshing](https://alicevision.org/#photogrammetry/meshing)
-'''
+"""
 
     inputs = [
         desc.File(
@@ -41,7 +41,7 @@ A Graph Cut Max-Flow is applied to optimally cut the volume. This cut represents
             description="File type for the output mesh.",
             value="obj",
             values=["gltf", "obj", "fbx", "stl"],
-            group="",
+            commandLineGroup="",
         ),
         desc.BoolParam(
             name="useBoundingBox",
@@ -50,18 +50,18 @@ A Graph Cut Max-Flow is applied to optimally cut the volume. This cut represents
                         "If enabled, it takes priority over the 'Estimate Space From SfM' option.\n"
                         "Parameters can be adjusted in advanced settings.",
             value=False,
-            group="",
+            commandLineGroup="",
         ),
         desc.GroupAttribute(
             name="boundingBox",
             label="Bounding Box Settings",
             description="Translation, rotation and scale of the bounding box.",
-            groupDesc=[
+            items=[
                 desc.GroupAttribute(
                     name="bboxTranslation",
                     label="Translation",
                     description="Position in space.",
-                    groupDesc=[
+                    items=[
                         desc.FloatParam(
                             name="x", label="x", description="X offset.",
                             value=0.0,
@@ -84,7 +84,7 @@ A Graph Cut Max-Flow is applied to optimally cut the volume. This cut represents
                     name="bboxRotation",
                     label="Euler Rotation",
                     description="Rotation in Euler degrees.",
-                    groupDesc=[
+                    items=[
                         desc.FloatParam(
                             name="x", label="x", description="Euler X rotation.",
                             value=0.0,
@@ -107,7 +107,7 @@ A Graph Cut Max-Flow is applied to optimally cut the volume. This cut represents
                     name="bboxScale",
                     label="Scale",
                     description="Scale of the bounding box.",
-                    groupDesc=[
+                    items=[
                         desc.FloatParam(
                             name="x", label="x", description="X scale.",
                             value=1.0,
@@ -304,7 +304,7 @@ A Graph Cut Max-Flow is applied to optimally cut the volume. This cut represents
             value=False,
             invalidate=False,
             advanced=True,
-            group="",
+            commandLineGroup="",
         ),
         desc.IntParam(
             name="densifyNbFront",
@@ -402,7 +402,7 @@ A Graph Cut Max-Flow is applied to optimally cut the volume. This cut represents
             value=False,
             invalidate=False,
             advanced=True,
-            group="",
+            commandLineGroup="",
         ),
         desc.FloatParam(
             name="maskHelperPointsWeight",

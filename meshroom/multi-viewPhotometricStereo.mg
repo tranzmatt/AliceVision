@@ -1,12 +1,11 @@
 {
     "header": {
-        "pipelineVersion": "2.2",
-        "releaseVersion": "2025.1.0-develop",
+        "releaseVersion": "2025.1.0",
         "fileVersion": "2.0",
-        "template": true,
         "nodesVersions": {
-            "CameraInit": "12.0",
-            "DepthMap": "5.0",
+            "CameraInit": "12.1",
+            "CopyFiles": "1.3",
+            "Depthmap": "5.1",
             "DepthMapFilter": "4.0",
             "FeatureExtraction": "1.3",
             "FeatureMatching": "2.0",
@@ -16,12 +15,13 @@
             "Meshing": "7.0",
             "PhotometricStereo": "1.0",
             "PrepareDenseScene": "3.1",
-            "SfMFilter": "1.0",
+            "SfMFilter": "2.0",
             "SfMTransfer": "2.1",
             "SphereDetection": "1.0",
             "StructureFromMotion": "3.3",
             "Texturing": "6.0"
-        }
+        },
+        "template": true
     },
     "graph": {
         "CameraInit_1": {
@@ -30,9 +30,7 @@
                 -400,
                 200
             ],
-            "inputs": {
-                "rawColorInterpretation": "LibRawWhiteBalancing"
-            }
+            "inputs": {}
         },
         "DepthMapFilter_1": {
             "nodeType": "DepthMapFilter",
@@ -176,6 +174,18 @@
                 "input": "{PhotometricStereo_1.outputSfmDataNormalPNG}"
             }
         },
+        "CopyFiles_1": {
+            "nodeType": "CopyFiles",
+            "position": [
+                2400,
+                0
+            ],
+            "inputs": {
+                "inputFiles": [
+                    "{PhotometricStereo_1.outputPath}"
+                ]
+            }
+        },
         "SfMFilter_1": {
             "nodeType": "SfMFilter",
             "position": [
@@ -184,7 +194,7 @@
             ],
             "inputs": {
                 "inputFile": "{CameraInit_1.output}",
-                "fileMatchingPattern": ".*/.*ambiant.*"
+                "expression": "contains(path, \"ambient\")"
             }
         },
         "SfMTransfer_1": {

@@ -5,12 +5,12 @@ from meshroom.core.utils import VERBOSE_LEVEL
 
 
 class SphereDetection(desc.CommandLineNode):
-    commandLine = 'aliceVision_sphereDetection {allParams}'
-    category = 'Photometric Stereo'
-    documentation = '''
+    commandLine = "aliceVision_sphereDetection {allParams}"
+    category = "Photometric Stereo"
+    documentation = """
 Detect spheres in pictures. These spheres will be used for lighting calibration.
 Spheres can be automatically detected or manually defined in the interface.
-'''
+"""
 
     inputs = [
         desc.File(
@@ -43,7 +43,7 @@ Spheres can be automatically detected or manually defined in the interface.
             name="sphereCenter",
             label="Sphere Center",
             description="Center of the circle (XY offset to the center of the image in pixels).",
-            groupDesc=[
+            items=[
                 desc.FloatParam(
                     name="x",
                     label="x",
@@ -60,7 +60,7 @@ Spheres can be automatically detected or manually defined in the interface.
                 ),
             ],
             enabled=lambda node: not node.autoDetect.value,
-            group=None,  # skip group from command line
+            commandLineGroup=None,  # skip group from command line
         ),
         desc.FloatParam(
             name="sphereRadius",

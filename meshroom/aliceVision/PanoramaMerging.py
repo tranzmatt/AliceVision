@@ -8,15 +8,13 @@ from meshroom.core.utils import EXR_STORAGE_DATA_TYPE, VERBOSE_LEVEL
 
 
 class PanoramaMerging(desc.AVCommandLineNode):
-    commandLine = 'aliceVision_panoramaMerging {allParams}'
-    size = desc.DynamicNodeSize('input')
+    commandLine = "aliceVision_panoramaMerging {allParams}"
+    size = desc.DynamicNodeSize("input")
     cpu = desc.Level.NORMAL
     ram = desc.Level.INTENSIVE
 
-    category = 'Panorama HDR'
-    documentation = '''
-Merge all inputs coming from the PanoramaCompositing node.
-'''
+    category = "Panorama HDR"
+    documentation = """Merge all inputs coming from the PanoramaCompositing node."""
 
     inputs = [
         desc.File(
@@ -37,7 +35,7 @@ Merge all inputs coming from the PanoramaCompositing node.
             description="Output file type for the merged panorama.",
             value="exr",
             values=["jpg", "png", "tif", "exr"],
-            group="",  # not part of allParams, as this is not a parameter for the command line
+            commandLineGroup="",  # not part of allParams, as this is not a parameter for the command line
         ),
         desc.BoolParam(
             name="useTiling",

@@ -1,22 +1,17 @@
 __version__ = "1.1"
 
-import json
-import os
-
 from meshroom.core import desc
 from meshroom.core.utils import COLORSPACES, EXR_STORAGE_DATA_TYPE, VERBOSE_LEVEL
-
+from pyalicevision import parallelization as avpar
 
 class PanoramaWarping(desc.AVCommandLineNode):
-    commandLine = 'aliceVision_panoramaWarping {allParams}'
-    size = desc.DynamicNodeSize('input')
+    commandLine = "aliceVision_panoramaWarping {allParams}"
+    size = avpar.DynamicReconstructedViewsSize("input")
     parallelization = desc.Parallelization(blockSize=5)
-    commandLineRange = '--rangeStart {rangeStart} --rangeSize {rangeBlockSize}'
+    commandLineRange = "--rangeStart {rangeStart} --rangeSize {rangeBlockSize}"
 
-    category = 'Panorama HDR'
-    documentation = '''
-Compute the image warping for each input image in the panorama coordinate system.
-'''
+    category = "Panorama HDR"
+    documentation = """Compute the image warping for each input image in the panorama coordinate system."""
 
     inputs = [
         desc.File(
@@ -30,7 +25,7 @@ Compute the image warping for each input image in the panorama coordinate system
             label="Estimate Resolution",
             description="Estimate output panorama resolution automatically based on the resolution of input images.",
             value=True,
-            group=None, # skip group from command line
+            commandLineGroup=None, # skip group from command line
         ),
         desc.IntParam(
             name="panoramaWidth",

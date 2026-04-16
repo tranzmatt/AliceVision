@@ -42,10 +42,16 @@ class ProgressDisplay
     void restart(unsigned long expectedCount) { _impl->restart(expectedCount); }
 
     // Thread safe with respect to other calls to operator++ and to calls to count()
-    void operator++() { _impl->increment(1); }
+    ProgressDisplay& operator++() {
+      _impl->increment(1);
+      return *this;
+    }
 
     // Thread safe with respect to other calls to operator++ and to calls to count()
-    void operator+=(unsigned long increment) { _impl->increment(increment); }
+    ProgressDisplay& operator+=(unsigned long increment) { 
+      _impl->increment(increment);
+      return *this;
+    }
 
     // Thread safe with respect to calls to operator++
     unsigned long count() { return _impl->count(); }
@@ -57,9 +63,15 @@ class ProgressDisplay
     std::shared_ptr<ProgressDisplayImpl> _impl;
 };
 
-/// Creates console-based progress bar
+/// Creates console-based progress bar (output to the given stream)
 ProgressDisplay createConsoleProgressDisplay(unsigned long expectedCount,
                                              std::ostream& os,
+                                             const std::string& s1 = "\n",  // leading strings
+                                             const std::string& s2 = "",
+                                             const std::string& s3 = "");
+
+/// Creates console-based progress bar (output to stdout)
+ProgressDisplay createConsoleProgressDisplay(unsigned long expectedCount,
                                              const std::string& s1 = "\n",  // leading strings
                                              const std::string& s2 = "",
                                              const std::string& s3 = "");

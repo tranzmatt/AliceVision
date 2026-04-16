@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <aliceVision/image/all.hpp>
+#include <aliceVision/image/Image.hpp>
 #include <aliceVision/types.hpp>
 
 #include <vector>
@@ -108,12 +108,15 @@ class CheckerDetector
      *     8.2. filter boards to only keep a sequence of nested boards
      *     8.3. connect and group these nested boards
      *
-     * @param source[in] Input image containing checkerboards.
-     * @param useNestedGrid[in] Indicate if the image contains nested calibration grids.
-     * @param debug[in] Indicate if debug images should be drawn.
+     * @param[in] source Input image containing checkerboards.
+     * @param[in] maxLevels maximum number of levels used in multiscale point detection
+     * @param[in] minConsensus minimum number of shared corners to merge checkerboards
+     * @param[in] useNestedGrid Indicate if the image contains nested calibration grids.
+     * @param[in] useAllSeeds Indicate if we want to use all detected corners as seeds or try to quickly ignore those already used in a board
+     * @param[in] debug Indicate if debug images should be drawn.
      * @return False if a problem occurred during detection, otherwise true.
      */
-    bool process(const image::Image<image::RGBColor>& source, bool useNestedGrids = false, bool debug = false);
+    bool process(const image::Image<image::RGBColor>& source, size_t maxLevels, size_t minConsensus, bool useNestedGrids, bool useAllSeeds, bool debug);
 
     /// Return a copy of detected checkerboards.
     std::vector<CheckerBoard> getBoards() const { return _boards; }
@@ -139,6 +142,13 @@ class CheckerDetector
 
     /// Return a reference to the debug image.
     const image::Image<image::RGBColor>& getDebugImage() const { return _debugImage; }
+
+    /**
+     * @brief Compute a score for the last processed image
+     * The score is a way to sort images according to their detected checkerboards
+     * @return the score for the last processed image
+     */
+    double getScore() const;
 
   private:
     /**
@@ -247,8 +257,9 @@ class CheckerDetector
      *
      * @param[out] boards Container for the built checkerboards.
      * @param[in] refinedCorners Corners with directions information.
+     * @param[in] useAllSeeds Indicate if we want to use all detected corners as seeds or try to quickly ignore those already used in a board
      */
-    void buildCheckerboards(std::vector<CheckerBoard>& boards, const std::vector<CheckerBoardCorner>& refinedCorners) const;
+    void buildCheckerboards(std::vector<CheckerBoard>& boards, const std::vector<CheckerBoardCorner>& refinedCorners, bool useAllSeeds) const;
 
     /**
      * @brief Find corner closest to a given position in an area constrained to a small cone around a given direction.
@@ -423,18 +434,20 @@ class CheckerDetector
 
     /**
      * @brief Merge overlapping nested boards.
+     * @param[in] minConsensus minimum number of shared corners to merge checkerboards
      */
-    void groupNestedCheckerboards();
+    void groupNestedCheckerboards(size_t minConsensus);
 
     /**
      * @brief Merge given board with reference board (first in the nesting sequence).
      *
+     * @param[in] minConsensus minimum number of shared corners to merge checkerboards
      * @param[in] ref_center Center point of reference board.
      * @param[in] other Index of board to merge.
      * @param[in] scale Checkboard scale within nesting sequence (power of 2).
      * @return False if merging failed, otherwise true.
      */
-    bool groupNestedCheckerboardsPair(Vec2i& ref_center, const IndexT& other, int scale);
+    bool groupNestedCheckerboardsPair(size_t minConsensus, Vec2i& ref_center, const IndexT& other, int scale);
 
   private:
     /// Detected checkerboards.

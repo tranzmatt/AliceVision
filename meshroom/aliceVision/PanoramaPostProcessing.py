@@ -8,14 +8,12 @@ from meshroom.core.utils import COLORSPACES, VERBOSE_LEVEL
 
 
 class PanoramaPostProcessing(desc.CommandLineNode):
-    commandLine = 'aliceVision_panoramaPostProcessing {allParams}'
+    commandLine = "aliceVision_panoramaPostProcessing {allParams}"
     cpu = desc.Level.NORMAL
     ram = desc.Level.INTENSIVE
 
-    category = 'Panorama HDR'
-    documentation = '''
-Post process the panorama.
-'''
+    category = "Panorama HDR"
+    documentation = """Post-process the panorama."""
 
     inputs = [
         desc.File(
@@ -80,7 +78,7 @@ Post process the panorama.
             description="Name of the output panorama.",
             value="panorama.exr",
             invalidate=False,
-            group=None,
+            commandLineGroup=None,
             advanced=True,
         ),
         desc.StringParam(
@@ -89,7 +87,7 @@ Post process the panorama.
             description="Name of the preview of the output panorama.",
             value="panoramaPreview.jpg",
             invalidate=False,
-            group=None,
+            commandLineGroup=None,
             advanced=True,
         ),
         desc.ChoiceParam(
@@ -121,6 +119,6 @@ Post process the panorama.
             label="Downscaled Panorama Levels",
             description="Downscaled versions of the generated panorama.",
             value=lambda attr: "{nodeCacheFolder}/" + os.path.splitext(attr.node.panoramaName.value)[0] + "_level_*.exr",
-            group="",
+            commandLineGroup="",
         ),
     ]

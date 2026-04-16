@@ -5,15 +5,15 @@ from meshroom.core.utils import DESCRIBER_TYPES, VERBOSE_LEVEL
 
 
 class FeatureRepeatability(desc.AVCommandLineNode):
-    commandLine = 'aliceVision_samples_repeatabilityDataset {allParams}'
-    size = desc.DynamicNodeSize('input')
+    commandLine = "aliceVision_samples_repeatabilityDataset {allParams}"
+    size = desc.DynamicNodeSize("input")
     # parallelization = desc.Parallelization(blockSize=40)
     # commandLineRange = '--rangeStart {rangeStart} --rangeSize {rangeBlockSize}'
 
-    category = 'Utils'
-    documentation = '''
+    category = "Utils"
+    documentation = """
 Compare feature/descriptor matching repeatability on some dataset with known homography motions.
-'''
+"""
 
     inputs = [
         desc.File(
@@ -91,14 +91,14 @@ Compare feature/descriptor matching repeatability on some dataset with known hom
             description="Invalidate.",
             value=0,
             range=(0, 10000, 1),
-            group="",
+            commandLineGroup="",
         ),
         desc.StringParam(
             name="comments",
             label="Comments",
             description="Comments.",
             value="",
-            group="",
+            commandLineGroup="",
             invalidate=False,
         ),
         desc.ChoiceParam(

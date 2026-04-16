@@ -5,14 +5,14 @@ from meshroom.core.utils import DESCRIBER_TYPES, VERBOSE_LEVEL
 
 
 class ConvertSfMFormat(desc.AVCommandLineNode):
-    commandLine = 'aliceVision_convertSfMFormat {allParams}'
-    size = desc.DynamicNodeSize('input')
+    commandLine = "aliceVision_convertSfMFormat {allParams}"
+    size = desc.DynamicNodeSize("input")
 
-    category = 'Utils'
-    documentation = '''
+    category = "Utils"
+    documentation = """
 Convert an SfM scene from one file format to another.
 It can also be used to remove specific parts of from an SfM scene (like filter all 3D landmarks or filter 2D observations).
-'''
+"""
 
     inputs = [
         desc.File(
@@ -27,7 +27,7 @@ It can also be used to remove specific parts of from an SfM scene (like filter a
             description="Output SfM file format.",
             value="abc",
             values=["abc", "sfm", "json", "ply", "baf"],
-            group="",  # exclude from command line
+            commandLineGroup="",  # exclude from command line
         ),
         desc.ChoiceParam(
             name="describerTypes",

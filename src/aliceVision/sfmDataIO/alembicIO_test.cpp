@@ -8,6 +8,8 @@
 #include "AlembicImporter.hpp"
 #include <aliceVision/sfmData/SfMData.hpp>
 #include <aliceVision/sfmDataIO/sfmDataIO.hpp>
+#include <aliceVision/camera/Pinhole.hpp>
+#include <aliceVision/system/Logger.hpp>
 
 #define BOOST_TEST_MODULE alembicIO
 
@@ -41,6 +43,7 @@ SfMData createTestScene(IndexT singleViewsCount, IndexT pointCount, IndexT rigCo
         view->getImage().addMetadata("A", "A");
         view->getImage().addMetadata("B", "B");
         view->getImage().addMetadata("C", "C");
+        view->setImageGroupId(156);
 
         view->addAncestor(static_cast<IndexT>(11));
         view->addAncestor(static_cast<IndexT>(22));
@@ -67,6 +70,8 @@ SfMData createTestScene(IndexT singleViewsCount, IndexT pointCount, IndexT rigCo
               i, camera::createPinhole(camera::EDISTORTION::DISTORTION_NONE, camera::EUNDISTORTION::UNDISTORTION_NONE, 1000, 1000, 36.0, 36.0, std::rand() % 10000, std::rand() % 10000));
         }
     }
+
+    sfm_data.getImageGroups().emplace(156, sfmData::ImageGroup::create(sfmData::ImageGroup::Type::ImageSet));
 
     sfmData::ImageInfo ancestorImg_1("path_1.jpg", 1024, 640);
     ancestorImg_1.addMetadata("D", "D");
@@ -136,9 +141,9 @@ SfMData createTestScene(IndexT singleViewsCount, IndexT pointCount, IndexT rigCo
         observations[0] = Observation(Vec2(std::rand() % 10000, std::rand() % 10000), 0, unknownScale);
         observations[1] = Observation(Vec2(std::rand() % 10000, std::rand() % 10000), 1, unknownScale);
         sfm_data.getLandmarks()[i].getObservations() = observations;
-        sfm_data.getLandmarks()[i].X = Vec3(std::rand() % 10000, std::rand() % 10000, std::rand() % 10000);
-        sfm_data.getLandmarks()[i].rgb = image::RGBColor((std::rand() % 1000) / 1000.0, (std::rand() % 1000) / 1000.0, (std::rand() % 1000) / 1000.0);
-        sfm_data.getLandmarks()[i].descType = feature::EImageDescriberType::SIFT;
+        sfm_data.getLandmarks()[i].setX(Vec3(std::rand() % 10000, std::rand() % 10000, std::rand() % 10000));
+        sfm_data.getLandmarks()[i].setRgb(image::RGBColor((std::rand() % 1000) / 1000.0, (std::rand() % 1000) / 1000.0, (std::rand() % 1000) / 1000.0));
+        sfm_data.getLandmarks()[i].setDescType(feature::EImageDescriberType::SIFT);
 
         // Add control points
     }

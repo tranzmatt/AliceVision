@@ -29,9 +29,10 @@ public:
      * Multiple iteration may be necessary to complete.
      * @param sfmData the scene to process
      * @param tracksHandler the tracks for this scene
+     * @param expansionMode select a configuration set among an enum
      * @return true if the iteration succeeded
     */
-    bool process(sfmData::SfMData & sfmData,  track::TracksHandler & tracksHandler);
+    bool process(sfmData::SfMData & sfmData,  track::TracksHandler & tracksHandler, EExpansionMode expansionMode);
 
     /**
      * @return a pointer to the chunk handler
@@ -42,7 +43,7 @@ public:
     }
 
     /**
-     * brief setup the expansion history handler
+     * @brief setup the expansion history handler
      * @param expansionHistory a shared ptr
      */
     void setExpansionHistoryHandler(ExpansionHistory::sptr & expansionHistory)
@@ -51,7 +52,7 @@ public:
     }
 
     /**
-     * brief setup the expansion history handler
+     * @brief setup the expansion history handler
      * @param expansionPolicy a unique ptr. Ownership will be taken
      */
     void setExpansionPolicyHandler(ExpansionPolicy::uptr & expansionPolicy)
@@ -60,7 +61,7 @@ public:
     }
 
     /**
-     * brief setup the expansion chunk handler
+     * @brief setup the expansion chunk handler
      * @param expansionChunk a unique ptr. Ownership will be taken
      */
     void setExpansionChunkHandler(ExpansionChunk::uptr & expansionChunk)

@@ -5,11 +5,9 @@ from meshroom.core.utils import VERBOSE_LEVEL
 
 
 class MeshMasking(desc.AVCommandLineNode):
-    commandLine = 'aliceVision_meshMasking {allParams}'
-    category = 'Mesh Post-Processing'
-    documentation = '''
-Decimate triangles based on image masks.
-'''
+    commandLine = "aliceVision_meshMasking {allParams}"
+    category = "Mesh Post-Processing"
+    documentation = """Decimate triangles based on image masks."""
 
     inputs = [
         desc.File(
@@ -30,7 +28,7 @@ Decimate triangles based on image masks.
             description="File type of the output mesh.",
             value="obj",
             values=["obj", "gltf", "fbx", "stl"],
-            group="",
+            commandLineGroup="",
         ),
         desc.ListAttribute(
             elementDesc=desc.File(

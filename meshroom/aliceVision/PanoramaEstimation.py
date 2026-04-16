@@ -1,20 +1,15 @@
 __version__ = "1.0"
 
-import json
-import os
-
 from meshroom.core import desc
 from meshroom.core.utils import DESCRIBER_TYPES, VERBOSE_LEVEL
 
 
 class PanoramaEstimation(desc.AVCommandLineNode):
-    commandLine = 'aliceVision_panoramaEstimation {allParams}'
-    size = desc.DynamicNodeSize('input')
+    commandLine = "aliceVision_panoramaEstimation {allParams}"
+    size = desc.DynamicNodeSize("input")
 
-    category = 'Panorama HDR'
-    documentation = '''
-Estimate relative camera rotations between input images.
-'''
+    category = "Panorama HDR"
+    documentation = """Estimate relative camera rotations between input images."""
 
     inputs = [
         desc.File(
